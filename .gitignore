@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+dist/
+.pytest_cache/
+
+# Node / Bun
+node_modules/
+mcp-servers/dist/
+
+# Runs (persisted briefing history - gitignored per spec)
+runs/*.json
+
+# Env
+.env
+.env.local
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/

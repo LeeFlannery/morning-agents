@@ -1,0 +1,30 @@
+[project]
+name = "morning-agents"
+version = "0.1.0"
+description = "Morning briefing agents for dev environment health, PRs, and day ahead"
+requires-python = ">=3.13"
+dependencies = [
+    "anthropic",
+    "mcp",
+    "pydantic",
+    "rich",
+    "typer",
+    "pyyaml",
+    "semver",
+]
+
+[project.scripts]
+morning-agents = "src.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+]
