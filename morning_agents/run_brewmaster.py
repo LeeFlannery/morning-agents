@@ -3,7 +3,6 @@ Quick runner: Brewmaster agent -> AgentResult JSON.
 Usage: op run --env-file=op.env -- uv run python -m morning_agents.run_brewmaster
 """
 import asyncio
-import json
 
 from mcp import ClientSession
 from mcp.client.stdio import stdio_client
@@ -19,7 +18,7 @@ async def main() -> None:
             await session.initialize()
             result = await agent.run({"homebrew-mcp": session})
 
-    print(json.dumps(result.model_dump(mode="json"), indent=2))
+    print(result.model_dump_json(indent=2))
 
 
 if __name__ == "__main__":
