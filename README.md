@@ -63,30 +63,26 @@ morning-agents/
 
 ## Setup
 
-**Requirements:** Python 3.13+ (pyenv), Bun, Homebrew
+**Requirements:** Python 3.13+ (pyenv), uv, Bun, Homebrew
 
 ```bash
-# Python
-pyenv install 3.13.12
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
+# Python deps (uv creates the venv and installs everything)
+uv sync --dev
 
 # TypeScript MCP servers
-cd mcp-servers
-bun install
+cd mcp-servers && bun install
 ```
 
 ## Running the spike
 
 ```bash
-python spike_test.py
+uv run python spike_test.py
 ```
 
 ## Running homebrew-mcp tests
 
 ```bash
-python evals/test_homebrew_mcp.py
+uv run python evals/test_homebrew_mcp.py
 ```
 
 ---
