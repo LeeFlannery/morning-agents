@@ -4,8 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "homebrew-mcp": "bun run homebrew-mcp/index.ts",
-    "devenv-mcp": "bun run devenv-mcp/index.ts"
+    "homebrew-mcp": "bun run homebrew-mcp/index.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",

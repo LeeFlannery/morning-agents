@@ -25,6 +25,7 @@ packages = ["morning_agents"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+testpaths = ["evals"]
 
 [dependency-groups]
 dev = [

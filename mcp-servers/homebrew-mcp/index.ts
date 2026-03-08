@@ -1,10 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { execFile } from "child_process";
-import { promisify } from "util";
-
-const execFileAsync = promisify(execFile);
 
 const server = new McpServer({
   name: "homebrew-mcp",
@@ -12,15 +8,17 @@ const server = new McpServer({
 });
 
 async function brewExec(args: string[]): Promise<{ stdout: string; stderr: string }> {
-  try {
-    const result = await execFileAsync("brew", args, {
-      env: { ...process.env, PATH: "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" },
-      timeout: 30000,
-    });
-    return { stdout: result.stdout, stderr: result.stderr };
-  } catch (err: any) {
-    return { stdout: err.stdout ?? "", stderr: err.stderr ?? String(err) };
-  }
+  const proc = Bun.spawn(["brew", ...args], {
+    env: { ...process.env, PATH: "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" },
+  });
+
+  const [stdout, stderr] = await Promise.all([
+    new Response(proc.stdout).text(),
+    new Response(proc.stderr).text(),
+  ]);
+
+  await proc.exited;
+  return { stdout, stderr };
 }
 
 // ─── list_outdated ────────────────────────────────────────────────────────────
@@ -32,7 +30,7 @@ server.tool(
   async () => {
     const { stdout, stderr } = await brewExec(["outdated", "--json=v2"]);
 
-    if (!stdout) {
+    if (!stdout.trim()) {
       return {
         content: [{
           type: "text",
@@ -41,7 +39,7 @@ server.tool(
       };
     }
 
-    let parsed: any;
+    let parsed: { formulae?: any[]; casks?: any[] };
     try {
       parsed = JSON.parse(stdout);
     } catch {
@@ -84,7 +82,7 @@ server.tool(
   async ({ name }) => {
     const { stdout, stderr } = await brewExec(["info", "--json=v2", name]);
 
-    if (!stdout) {
+    if (!stdout.trim()) {
       return {
         content: [{
           type: "text",
@@ -93,7 +91,7 @@ server.tool(
       };
     }
 
-    let parsed: any;
+    let parsed: { formulae?: any[]; casks?: any[] };
     try {
       parsed = JSON.parse(stdout);
     } catch {
@@ -105,7 +103,6 @@ server.tool(
       };
     }
 
-    // Could be formula or cask
     const item = parsed.formulae?.[0] ?? parsed.casks?.[0];
     if (!item) {
       return {
@@ -144,19 +141,15 @@ server.tool(
   async () => {
     const { stdout, stderr } = await brewExec(["doctor"]);
     const combined = (stdout + "\n" + stderr).trim();
-
     const healthy = combined.includes("Your system is ready to brew");
 
-    // Extract warnings: lines that start with "Warning:" blocks
     const warnings: string[] = [];
     const lines = combined.split("\n");
     let currentWarning: string[] = [];
 
     for (const line of lines) {
       if (line.startsWith("Warning:")) {
-        if (currentWarning.length > 0) {
-          warnings.push(currentWarning.join("\n").trim());
-        }
+        if (currentWarning.length > 0) warnings.push(currentWarning.join("\n").trim());
         currentWarning = [line];
       } else if (currentWarning.length > 0 && line.trim() !== "") {
         currentWarning.push(line);
@@ -165,9 +158,7 @@ server.tool(
         currentWarning = [];
       }
     }
-    if (currentWarning.length > 0) {
-      warnings.push(currentWarning.join("\n").trim());
-    }
+    if (currentWarning.length > 0) warnings.push(currentWarning.join("\n").trim());
 
     return {
       content: [{
