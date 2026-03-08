@@ -16,6 +16,7 @@ runs/*.json
 # Env
 .env
 .env.local
+op.env
 
 # macOS
 .DS_Store
@@ -23,3 +24,7 @@ runs/*.json
 # IDE
 .vscode/
 .idea/
+
+# Local context docs (for sharing with Claude.com / video scripting)
+local-readme.md
+SCRIPT_LOCAL.md

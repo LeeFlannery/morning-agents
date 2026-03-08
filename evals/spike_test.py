@@ -2,7 +2,6 @@
 Spike test: Python MCP client <-> TypeScript MCP server over stdio.
 Proves the bridge works before we build the real homebrew-mcp.
 """
-import pytest
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
