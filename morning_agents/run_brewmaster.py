@@ -1,0 +1,30 @@
+"""
+Quick runner: Brewmaster agent -> AgentResult JSON.
+Usage: op run --env-file=op.env -- uv run python -m morning_agents.run_brewmaster
+"""
+import asyncio
+import json
+
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+
+from morning_agents.agents.brewmaster import BrewmasterAgent
+
+SERVER_PARAMS = StdioServerParameters(
+    command="bun",
+    args=["run", "mcp-servers/homebrew-mcp/index.ts"],
+)
+
+
+async def main() -> None:
+    agent = BrewmasterAgent()
+    async with stdio_client(SERVER_PARAMS) as (read, write):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+            result = await agent.run({"homebrew-mcp": session})
+
+    print(json.dumps(result.model_dump(mode="json"), indent=2))
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
