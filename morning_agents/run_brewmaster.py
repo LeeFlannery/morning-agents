@@ -5,20 +5,16 @@ Usage: op run --env-file=op.env -- uv run python -m morning_agents.run_brewmaste
 import asyncio
 import json
 
-from mcp import ClientSession, StdioServerParameters
+from mcp import ClientSession
 from mcp.client.stdio import stdio_client
 
 from morning_agents.agents.brewmaster import BrewmasterAgent
-
-SERVER_PARAMS = StdioServerParameters(
-    command="bun",
-    args=["run", "mcp-servers/homebrew-mcp/index.ts"],
-)
+from morning_agents.config import HOMEBREW_MCP
 
 
 async def main() -> None:
     agent = BrewmasterAgent()
-    async with stdio_client(SERVER_PARAMS) as (read, write):
+    async with stdio_client(HOMEBREW_MCP) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()
             result = await agent.run({"homebrew-mcp": session})

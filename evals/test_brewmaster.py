@@ -4,16 +4,12 @@ Starts homebrew-mcp, runs BrewmasterAgent once, validates AgentResult contract.
 Requires ANTHROPIC_API_KEY in environment (use: op run --env-file=op.env -- uv run pytest)
 """
 import pytest
-from mcp import ClientSession, StdioServerParameters
+from mcp import ClientSession
 from mcp.client.stdio import stdio_client
 
 from morning_agents.agents.brewmaster import BrewmasterAgent
+from morning_agents.config import HOMEBREW_MCP
 from morning_agents.contracts.models import AgentResult, AgentStatus, Severity
-
-SERVER_PARAMS = StdioServerParameters(
-    command="bun",
-    args=["run", "mcp-servers/homebrew-mcp/index.ts"],
-)
 
 
 @pytest.fixture(scope="module")
@@ -23,7 +19,7 @@ def agent():
 
 @pytest.fixture(scope="module")
 async def result(agent) -> AgentResult:
-    async with stdio_client(SERVER_PARAMS) as (read, write):
+    async with stdio_client(HOMEBREW_MCP) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()
             return await agent.run({"homebrew-mcp": session})

@@ -18,6 +18,7 @@ from morning_agents.contracts.models import (
 from morning_agents.skills.mcp_utils import parse_tool_result, strip_fences
 from morning_agents.skills.semver import classify
 from morning_agents.skills.severity import from_version_jump
+from morning_agents.config import MODEL
 from morning_agents.skills.timing import ms_timer
 
 _client = anthropic.AsyncAnthropic()
@@ -53,6 +54,7 @@ class BrewmasterAgent(BaseAgent):
                 session.call_tool("list_outdated", {}),
                 session.call_tool("get_doctor_status", {}),
             )
+        # Both calls share wall-clock elapsed time since they ran concurrently.
         tool_calls.append(ToolCall(tool="list_outdated", server="homebrew-mcp", duration_ms=elapsed[0], success=True))
         tool_calls.append(ToolCall(tool="get_doctor_status", server="homebrew-mcp", duration_ms=elapsed[0], success=True))
         outdated = parse_tool_result(outdated_result)
@@ -69,7 +71,7 @@ class BrewmasterAgent(BaseAgent):
 
         with ms_timer() as elapsed:
             response = await _client.messages.create(
-                model="claude-sonnet-4-6",
+                model=MODEL,
                 max_tokens=2048,
                 system=self.get_system_prompt(),
                 messages=[{"role": "user", "content": user_content}],
