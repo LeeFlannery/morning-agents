@@ -63,7 +63,7 @@ morning-agents/
 
 ## Setup
 
-**Requirements:** Python 3.13+ (pyenv), uv, Bun, Homebrew
+**Requirements:** Python 3.13+, uv, Bun, Homebrew
 
 ```bash
 # Python deps
