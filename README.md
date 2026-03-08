@@ -28,7 +28,7 @@ An MCP server (`mcp-servers/homebrew-mcp/index.ts`) that wraps the `brew` CLI.
 
 ### Pydantic contracts
 
-All data shapes are defined in `src/contracts/models.py`. Every agent produces `Finding` objects, collected into an `AgentResult`. The orchestrator combines results into a `BriefingOutput`.
+All data shapes are defined in `morning_agents/contracts/models.py`. Every agent produces `Finding` objects, collected into an `AgentResult`. The orchestrator combines results into a `BriefingOutput`.
 
 ```
 BriefingOutput
@@ -49,7 +49,7 @@ morning-agents/
 │   ├── homebrew-mcp/index.ts   # Homebrew connector
 │   ├── spike/index.ts          # Bridge spike
 │   └── package.json            # Bun dependencies
-├── src/
+├── morning_agents/
 │   └── contracts/
 │       └── models.py           # Pydantic models (Finding, AgentResult, etc.)
 ├── evals/
