@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from datetime import datetime, timezone
 
@@ -46,16 +47,15 @@ class BrewmasterAgent(BaseAgent):
         tool_calls: list[ToolCall] = []
         findings: list[Finding] = []
 
-        # ── Step 1: list outdated ─────────────────────────────────────────────
+        # ── Steps 1+2: list outdated + doctor status (concurrent) ────────────
         with ms_timer() as elapsed:
-            outdated_result = await session.call_tool("list_outdated", {})
+            outdated_result, doctor_result = await asyncio.gather(
+                session.call_tool("list_outdated", {}),
+                session.call_tool("get_doctor_status", {}),
+            )
         tool_calls.append(ToolCall(tool="list_outdated", server="homebrew-mcp", duration_ms=elapsed[0], success=True))
-        outdated = parse_tool_result(outdated_result)
-
-        # ── Step 2: doctor status ─────────────────────────────────────────────
-        with ms_timer() as elapsed:
-            doctor_result = await session.call_tool("get_doctor_status", {})
         tool_calls.append(ToolCall(tool="get_doctor_status", server="homebrew-mcp", duration_ms=elapsed[0], success=True))
+        outdated = parse_tool_result(outdated_result)
         doctor = parse_tool_result(doctor_result)
 
         # ── Step 3: Claude reasoning ──────────────────────────────────────────
