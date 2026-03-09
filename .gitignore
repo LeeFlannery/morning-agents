@@ -25,6 +25,6 @@ op.env
 .vscode/
 .idea/
 
-# Local context docs (for sharing with Claude.com / video scripting)
-local-readme.md
-SCRIPT_LOCAL.md
+# Claude Code local files
+.claude/
+claude.md
