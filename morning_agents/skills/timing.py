@@ -2,7 +2,13 @@ from __future__ import annotations
 
 import time
 from contextlib import contextmanager
+from datetime import datetime
 from typing import Generator
+
+
+def elapsed_ms(start: datetime, end: datetime) -> int:
+    """Return the number of milliseconds between two datetimes."""
+    return int((end - start).total_seconds() * 1000)
 
 
 @contextmanager

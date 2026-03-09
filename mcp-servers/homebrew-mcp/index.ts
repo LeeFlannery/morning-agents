@@ -10,6 +10,7 @@ const server = new McpServer({
 async function brewExec(args: string[]): Promise<{ stdout: string; stderr: string }> {
   const proc = Bun.spawn(["brew", ...args], {
     env: { ...process.env, PATH: "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" },
+    stderr: "pipe",
   });
 
   const [stdout, stderr] = await Promise.all([

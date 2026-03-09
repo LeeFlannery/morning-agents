@@ -6,3 +6,9 @@ HOMEBREW_MCP = StdioServerParameters(
 )
 
 MODEL = "claude-sonnet-4-6"
+
+SERVER_REGISTRY: dict[str, StdioServerParameters] = {
+    "homebrew-mcp": HOMEBREW_MCP,
+    # "devenv-mcp": ...,
+    # "github-mcp": ...,
+}

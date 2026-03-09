@@ -15,11 +15,11 @@ from morning_agents.contracts.models import (
     Severity,
     ToolCall,
 )
-from morning_agents.skills.mcp_utils import parse_tool_result, strip_fences
+from morning_agents.skills.mcp_utils import call_tool, parse_tool_result, strip_fences
 from morning_agents.skills.semver import classify
 from morning_agents.skills.severity import from_version_jump
 from morning_agents.config import MODEL
-from morning_agents.skills.timing import ms_timer
+from morning_agents.skills.timing import elapsed_ms, ms_timer
 
 _client = anthropic.AsyncAnthropic()
 
@@ -51,8 +51,8 @@ class BrewmasterAgent(BaseAgent):
         # ── Steps 1+2: list outdated + doctor status (concurrent) ────────────
         with ms_timer() as elapsed:
             outdated_result, doctor_result = await asyncio.gather(
-                session.call_tool("list_outdated", {}),
-                session.call_tool("get_doctor_status", {}),
+                call_tool(session, "list_outdated", {}),
+                call_tool(session, "get_doctor_status", {}),
             )
         # Both calls share wall-clock elapsed time since they ran concurrently.
         tool_calls.append(ToolCall(tool="list_outdated", server="homebrew-mcp", duration_ms=elapsed[0], success=True))
@@ -89,7 +89,7 @@ class BrewmasterAgent(BaseAgent):
                 status=AgentStatus.error,
                 started_at=started_at,
                 completed_at=completed_at,
-                duration_ms=int((completed_at - started_at).total_seconds() * 1000),
+                duration_ms=elapsed_ms(started_at, completed_at),
                 tool_calls=tool_calls,
                 error=f"Failed to parse Claude response as JSON: {strip_fences(response.content[0].text)[:200]}",
             )
@@ -152,7 +152,7 @@ class BrewmasterAgent(BaseAgent):
             status=AgentStatus.success,
             started_at=started_at,
             completed_at=completed_at,
-            duration_ms=int((completed_at - started_at).total_seconds() * 1000),
+            duration_ms=elapsed_ms(started_at, completed_at),
             findings=findings,
             tool_calls=tool_calls,
         )
