@@ -27,4 +27,7 @@ op.env
 
 # Claude Code local files
 .claude/
-claude.md
+CLAUDE.md
+
+# Scratch / local experiments
+scratch/
