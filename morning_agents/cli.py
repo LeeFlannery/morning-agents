@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 
 import typer
 from rich.console import Console
@@ -11,7 +12,7 @@ from morning_agents.contracts.models import AgentResult, AgentStatus, BriefingOu
 from morning_agents.orchestrator import Orchestrator
 
 app = typer.Typer(add_completion=False)
-console = Console()
+console = Console(stderr=True)  # Rich output → stderr (human-readable, doesn't pollute pipes)
 
 _AGENTS = {"brewmaster": BrewmasterAgent}
 
@@ -70,10 +71,9 @@ def main(
         help="Agents to run (repeat for multiple).",
     ),
     parallel: bool = typer.Option(True, help="Run agents in parallel."),
-    json_output: bool = typer.Option(False, "--json", help="Print raw JSON output."),
-    quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress detail lines."),
+    quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress detail lines in progress output."),
 ) -> None:
-    """Run the morning briefing."""
+    """Run the morning briefing. Progress → stderr. JSON results → stdout."""
     unknown = set(agent) - set(_AGENTS)
     if unknown:
         typer.echo(f"Unknown agent(s): {', '.join(sorted(unknown))}", err=True)
@@ -83,10 +83,8 @@ def main(
     orchestrator = Orchestrator(agents=agents, quiet_mode=quiet, parallel=parallel)
     briefing = asyncio.run(orchestrator.run())
 
-    if json_output:
-        print(briefing.model_dump_json(indent=2))
-    else:
-        _render(briefing)
+    _render(briefing)
+    print(briefing.model_dump_json(indent=2))  # stdout — always, pipeable
 
     if any(r.status == AgentStatus.error for r in briefing.agent_results):
         raise typer.Exit(1)

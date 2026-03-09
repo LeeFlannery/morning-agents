@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 from datetime import datetime, timezone
 from typing import Any
 
@@ -41,13 +42,13 @@ class ServerManager:
     async def start_servers(self, needed: set[str]) -> None:
         known = {name for name in needed if name in SERVER_REGISTRY}
         for name in needed - known:
-            print(f"[ServerManager] WARNING: '{name}' not in registry, skipping")
+            print(f"[ServerManager] WARNING: '{name}' not in registry, skipping", file=sys.stderr)
 
         async def _start_safe(name: str) -> None:
             try:
                 await asyncio.wait_for(self._start_one(name), timeout=15.0)
             except Exception as e:
-                print(f"[ServerManager] ERROR: failed to start '{name}': {e}")
+                print(f"[ServerManager] ERROR: failed to start '{name}': {e}", file=sys.stderr)
 
         await asyncio.gather(*[_start_safe(name) for name in known])
 
@@ -70,7 +71,7 @@ class ServerManager:
             try:
                 await ctx.__aexit__(None, None, None)
             except Exception as e:
-                print(f"[ServerManager] WARNING during shutdown: {e}")
+                print(f"[ServerManager] WARNING during shutdown: {e}", file=sys.stderr)
 
 
 class Orchestrator:
