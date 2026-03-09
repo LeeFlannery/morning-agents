@@ -4,7 +4,7 @@ from typing import Literal
 
 import semver
 
-VersionJump = Literal["patch", "minor", "major", "unknown"]
+VersionJump = Literal["patch", "minor", "major", "current", "unknown"]
 
 
 def classify(current: str, latest: str) -> VersionJump:
@@ -21,4 +21,4 @@ def classify(current: str, latest: str) -> VersionJump:
         return "minor"
     if lat.patch > cur.patch:
         return "patch"
-    return "unknown"
+    return "current"

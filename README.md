@@ -6,7 +6,7 @@ Python is the brains. TypeScript/Bun is the hands.
 
 ---
 
-## What's here (Sessions 1-3)
+## What's here (Sessions 1-4)
 
 ### Architecture
 
@@ -16,8 +16,12 @@ A Python orchestrator spawns TypeScript MCP servers as child processes over stdi
 morning-agents (Python CLI)
     └── Orchestrator
             ├── ServerManager  ←→  stdio  ←→  homebrew-mcp (Bun)
-            └── BrewmasterAgent → Finding[]
+            │                                  devenv-mcp (Bun)
+            ├── BrewmasterAgent → Finding[]
+            └── DevEnvAgent     → Finding[]
 ```
+
+Both agents run concurrently by default. Adding a new agent requires only a new agent file — the orchestrator, renderer, and CLI are agent-agnostic.
 
 ### homebrew-mcp
 
@@ -29,9 +33,26 @@ A TypeScript MCP server (`mcp-servers/homebrew-mcp/index.ts`) that wraps the `br
 | `get_package_info` | Details on a specific package (version, desc, deps) |
 | `get_doctor_status` | Runs `brew doctor`, returns health status and warnings |
 
+### devenv-mcp
+
+A TypeScript MCP server (`mcp-servers/devenv-mcp/index.ts`) that checks dev tool versions against their latest releases.
+
+| Tool | What it does |
+|------|-------------|
+| `check_xcode_version` | Installed vs latest Xcode; CLI Tools status |
+| `check_vscode_version` | Installed vs latest VS Code |
+| `check_node_version` | Installed vs latest LTS Node.js |
+| `check_python_version` | Installed vs latest Python 3 |
+
+Each tool runs a local `spawn` call and a version API fetch concurrently. Gracefully handles tools that are not installed.
+
 ### Brewmaster agent
 
 Calls homebrew-mcp tools concurrently, sends results to Claude for analysis, classifies version jumps (patch/minor/major), and produces structured `Finding` objects with severity labels.
+
+### DevEnv agent
+
+Calls all four devenv-mcp tools concurrently, sends results to Claude for analysis, classifies version jumps, and produces `Finding` objects. The local semver classifier is authoritative; Claude's value is the fallback for non-semver version strings.
 
 ### Orchestrator
 
@@ -57,11 +78,13 @@ Severity levels: `info` (green) · `warning` (yellow) · `action_needed` (red)
 ```
 morning-agents/
 ├── mcp-servers/
-│   └── homebrew-mcp/index.ts   # Homebrew MCP server (Bun)
+│   ├── homebrew-mcp/index.ts   # Homebrew MCP server (Bun)
+│   └── devenv-mcp/index.ts     # Dev tool version checker (Bun)
 ├── morning_agents/
 │   ├── agents/
 │   │   ├── base.py             # BaseAgent ABC
-│   │   └── brewmaster.py       # Homebrew agent
+│   │   ├── brewmaster.py       # Homebrew agent
+│   │   └── devenv.py           # Dev tool versions agent
 │   ├── contracts/
 │   │   └── models.py           # Pydantic models (Finding, AgentResult, etc.)
 │   ├── skills/
@@ -74,6 +97,7 @@ morning-agents/
 │   └── orchestrator.py         # ServerManager + Orchestrator
 ├── evals/
 │   ├── test_brewmaster.py      # Brewmaster integration tests
+│   ├── test_devenv.py          # DevEnv integration tests
 │   └── test_orchestrator.py    # Orchestrator integration tests
 ├── pyproject.toml
 └── .python-version             # 3.13.12
@@ -104,6 +128,7 @@ morning-agents --help
 morning-agents --quiet              # titles only, no detail lines
 morning-agents --no-parallel        # run agents sequentially
 morning-agents -a brewmaster        # run a specific agent (repeat for multiple)
+morning-agents -a brewmaster -a devenv  # run both explicitly
 
 # JSON output is always written to stdout. Capture or redirect as needed:
 op run --env-file=op.env -- uv run morning-agents > briefing.json
@@ -119,8 +144,8 @@ op run --env-file=op.env -- uv run pytest evals/ -v
 
 ## Where it's going
 
-### Session 4 - devenv-mcp + DevEnv agent
-A second MCP server checking Xcode, VS Code, Node, and Python versions against latest. Runs alongside Brewmaster concurrently.
+### ~~Session 4 - devenv-mcp + DevEnv agent~~ (complete)
+Second MCP server checking Xcode, VS Code, Node, and Python versions against latest. Runs alongside Brewmaster concurrently. Both agents are now the default.
 
 ### Session 5 - Community MCPs + PR Queue + Day Ahead
 GitHub (PR review queue), Google Calendar, and Gmail via community MCP servers. Two more agents.

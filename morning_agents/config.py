@@ -5,11 +5,16 @@ HOMEBREW_MCP = StdioServerParameters(
     args=["run", "mcp-servers/homebrew-mcp/index.ts"],
 )
 
+DEVENV_MCP = StdioServerParameters(
+    command="bun",
+    args=["run", "mcp-servers/devenv-mcp/index.ts"],
+)
+
 MODEL = "claude-sonnet-4-6"
 VERSION = "0.1.0"
 
 SERVER_REGISTRY: dict[str, StdioServerParameters] = {
     "homebrew-mcp": HOMEBREW_MCP,
-    # "devenv-mcp": ...,
+    "devenv-mcp": DEVENV_MCP,
     # "github-mcp": ...,
 }
