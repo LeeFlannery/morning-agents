@@ -101,15 +101,18 @@ op run --env-file=op.env -- uv run morning-agents
 
 # Options
 morning-agents --help
-morning-agents --quiet          # titles only, no detail lines
-morning-agents --json           # raw BriefingOutput JSON
-morning-agents --no-parallel    # run agents sequentially
+morning-agents --quiet              # titles only, no detail lines
+morning-agents --no-parallel        # run agents sequentially
+morning-agents -a brewmaster        # run a specific agent (repeat for multiple)
+
+# JSON output is always written to stdout. Capture or redirect as needed:
+op run --env-file=op.env -- uv run morning-agents > briefing.json
 ```
 
 ## Tests
 
 ```bash
-op run --env-file=op.env -- uv run pytest
+op run --env-file=op.env -- uv run pytest evals/ -v
 ```
 
 ---
@@ -128,5 +131,5 @@ Correlates findings across agents (e.g., a major Node upgrade flagged by both de
 ### Session 7 - Evals + governance
 Eval suite with an LLM judge, read-only scope enforcement, max tool call limits, and execution logging.
 
-### Session 8 - README + publish
-Architecture diagrams, final docs, public release.
+### Session 8 - Architecture diagrams + polish
+Architecture diagrams, eval suite hardening, and final cleanup.

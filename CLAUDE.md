@@ -37,6 +37,8 @@ Project-level instructions for Claude Code. Loaded automatically every session.
 ## Known constraints
 
 - **anyio cancel scopes** cannot be exited in a different task than they were entered. The MCP SDK uses anyio task groups internally. `ServerManager` uses manual `__aenter__`/`__aexit__` with exception swallowing in `shutdown()` — this is intentional, not a bug. Do not replace with `AsyncExitStack`.
+- **`morning_agents/orchestrator/`** is an empty directory — a stale artifact from an earlier refactor. Do not create files there expecting them to be auto-imported. The orchestrator module is `morning_agents/orchestrator.py`.
+- **`pyyaml`** is declared in `pyproject.toml` but not currently used. Do not remove it without checking if any planned agent will need it — it was added in anticipation of YAML config support.
 
 ---
 
