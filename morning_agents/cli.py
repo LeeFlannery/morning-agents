@@ -8,13 +8,14 @@ from rich.console import Console
 from rich.text import Text
 
 from morning_agents.agents.brewmaster import BrewmasterAgent
+from morning_agents.agents.devenv import DevEnvAgent
 from morning_agents.contracts.models import AgentResult, AgentStatus, BriefingOutput, Severity
 from morning_agents.orchestrator import Orchestrator
 
 app = typer.Typer(add_completion=False)
 console = Console(stderr=True)  # Rich output → stderr (human-readable, doesn't pollute pipes)
 
-_AGENTS = {"brewmaster": BrewmasterAgent}
+_AGENTS = {"brewmaster": BrewmasterAgent, "devenv": DevEnvAgent}
 
 _SEVERITY_STYLE: dict[Severity, tuple[str, str]] = {
     Severity.info:         ("green",    "INFO  "),
@@ -66,7 +67,7 @@ def _render_agent(result: AgentResult, *, quiet: bool = False) -> None:
 @app.command()
 def main(
     agent: list[str] = typer.Option(
-        ["brewmaster"],
+        ["brewmaster", "devenv"],
         "--agent", "-a",
         help="Agents to run (repeat for multiple).",
     ),
