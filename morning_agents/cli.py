@@ -23,6 +23,7 @@ _SEVERITY_STYLE: dict[Severity, tuple[str, str]] = {
 
 
 def _render(briefing: BriefingOutput) -> None:
+    quiet = briefing.config.quiet_mode
     ts = briefing.generated_at.strftime("%Y-%m-%d %H:%M UTC")
     agents_n = briefing.summary.agents_run
     dur = f"{briefing.duration_ms / 1000:.1f}s"
@@ -30,7 +31,7 @@ def _render(briefing: BriefingOutput) -> None:
     console.print()
 
     for result in briefing.agent_results:
-        _render_agent(result)
+        _render_agent(result, quiet=quiet)
 
     s = briefing.summary
     parts = [f"[bold]{s.total_findings}[/bold] findings"]
@@ -41,7 +42,7 @@ def _render(briefing: BriefingOutput) -> None:
     console.print()
 
 
-def _render_agent(result: AgentResult) -> None:
+def _render_agent(result: AgentResult, *, quiet: bool = False) -> None:
     if result.status == AgentStatus.error:
         console.print(f"  [bold red]{result.agent_display_name}[/bold red]  [red]ERROR: {result.error}[/red]")
         console.print()
@@ -55,7 +56,7 @@ def _render_agent(result: AgentResult) -> None:
         title = Text(f"  {finding.title}")
         line = Text.assemble(badge, title)
         console.print("   ", line)
-        if finding.detail:
+        if finding.detail and not quiet:
             console.print(f"          [dim]{finding.detail}[/dim]")
 
     console.print()

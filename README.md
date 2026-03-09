@@ -2,23 +2,26 @@
 
 A CLI tool that runs agents every morning and prints a terminal briefing: Homebrew health, dev tool versions, GitHub PRs, and your day ahead.
 
+Python is the brains. TypeScript/Bun is the hands.
+
 ---
 
-## What's here (Session 1)
+## What's here (Sessions 1-3)
 
-### TS/Python MCP bridge (spike)
+### Architecture
 
-The core architecture is a Python orchestrator that spawns TypeScript MCP servers as child processes and communicates over stdio. `spike_test.py` proves this works.
+A Python orchestrator spawns TypeScript MCP servers as child processes over stdio. Each agent declares which servers it needs; the orchestrator starts them concurrently and hands off connected sessions.
 
 ```
-Python orchestrator
-    └── stdio → TypeScript MCP server (Bun)
-                    └── shell commands, APIs, etc.
+morning-agents (Python CLI)
+    └── Orchestrator
+            ├── ServerManager  ←→  stdio  ←→  homebrew-mcp (Bun)
+            └── BrewmasterAgent → Finding[]
 ```
 
 ### homebrew-mcp
 
-An MCP server (`mcp-servers/homebrew-mcp/index.ts`) that wraps the `brew` CLI.
+A TypeScript MCP server (`mcp-servers/homebrew-mcp/index.ts`) that wraps the `brew` CLI.
 
 | Tool | What it does |
 |------|-------------|
@@ -26,15 +29,23 @@ An MCP server (`mcp-servers/homebrew-mcp/index.ts`) that wraps the `brew` CLI.
 | `get_package_info` | Details on a specific package (version, desc, deps) |
 | `get_doctor_status` | Runs `brew doctor`, returns health status and warnings |
 
+### Brewmaster agent
+
+Calls homebrew-mcp tools concurrently, sends results to Claude for analysis, classifies version jumps (patch/minor/major), and produces structured `Finding` objects with severity labels.
+
+### Orchestrator
+
+Manages the full briefing lifecycle: start servers, run agents in parallel, assemble `BriefingOutput`, tear down servers. Each agent run has a 120s timeout and full error isolation — one agent failing doesn't affect others.
+
 ### Pydantic contracts
 
-All data shapes are defined in `morning_agents/contracts/models.py`. Every agent produces `Finding` objects, collected into an `AgentResult`. The orchestrator combines results into a `BriefingOutput`.
+All data shapes live in `morning_agents/contracts/models.py`. Every agent produces `Finding` objects, collected into `AgentResult`. The orchestrator combines results into `BriefingOutput`.
 
 ```
 BriefingOutput
 ├── AgentResult (one per agent)
 │   └── Finding[] (id, severity, title, detail, metadata)
-└── CrossReference[] (orchestrator-generated)
+└── CrossReference[] (session 6)
 ```
 
 Severity levels: `info` (green) · `warning` (yellow) · `action_needed` (red)
@@ -46,17 +57,26 @@ Severity levels: `info` (green) · `warning` (yellow) · `action_needed` (red)
 ```
 morning-agents/
 ├── mcp-servers/
-│   ├── homebrew-mcp/index.ts   # Homebrew connector
-│   ├── spike/index.ts          # Bridge spike
-│   └── package.json            # Bun dependencies
+│   └── homebrew-mcp/index.ts   # Homebrew MCP server (Bun)
 ├── morning_agents/
-│   └── contracts/
-│       └── models.py           # Pydantic models (Finding, AgentResult, etc.)
+│   ├── agents/
+│   │   ├── base.py             # BaseAgent ABC
+│   │   └── brewmaster.py       # Homebrew agent
+│   ├── contracts/
+│   │   └── models.py           # Pydantic models (Finding, AgentResult, etc.)
+│   ├── skills/
+│   │   ├── mcp_utils.py        # call_tool, parse_tool_result, strip_fences
+│   │   ├── semver.py           # Version jump classification
+│   │   ├── severity.py         # Severity mapping
+│   │   └── timing.py           # ms_timer, elapsed_ms
+│   ├── cli.py                  # Typer CLI + Rich renderer
+│   ├── config.py               # SERVER_REGISTRY, MODEL, VERSION
+│   └── orchestrator.py         # ServerManager + Orchestrator
 ├── evals/
-│   └── test_homebrew_mcp.py    # Integration tests for homebrew-mcp
-├── spike_test.py               # TS/Python bridge proof
-├── pyproject.toml              # Python config + dependencies
-└── .python-version             # 3.13.12 (pyenv)
+│   ├── test_brewmaster.py      # Brewmaster integration tests
+│   └── test_orchestrator.py    # Orchestrator integration tests
+├── pyproject.toml
+└── .python-version             # 3.13.12
 ```
 
 ---
@@ -73,27 +93,28 @@ uv sync --dev
 cd mcp-servers && bun install
 ```
 
-## Running the spike
+## Running
 
 ```bash
-uv run python spike_test.py
+# Needs ANTHROPIC_API_KEY — use 1Password or export directly
+op run --env-file=op.env -- uv run morning-agents
+
+# Options
+morning-agents --help
+morning-agents --quiet          # titles only, no detail lines
+morning-agents --json           # raw BriefingOutput JSON
+morning-agents --no-parallel    # run agents sequentially
 ```
 
-## Running homebrew-mcp tests
+## Tests
 
 ```bash
-uv run python evals/test_homebrew_mcp.py
+op run --env-file=op.env -- uv run pytest
 ```
 
 ---
 
 ## Where it's going
-
-### Session 2 - Brewmaster agent
-The first agent. Calls homebrew-mcp tools, classifies version bumps (patch/minor/major), and produces structured `Finding` objects with severity labels.
-
-### Session 3 - CLI + orchestrator
-`morning-agents` as a runnable command. Starts the MCP server, runs the Brewmaster agent, and renders output in the terminal with Rich.
 
 ### Session 4 - devenv-mcp + DevEnv agent
 A second MCP server checking Xcode, VS Code, Node, and Python versions against latest. Runs alongside Brewmaster concurrently.
@@ -102,7 +123,7 @@ A second MCP server checking Xcode, VS Code, Node, and Python versions against l
 GitHub (PR review queue), Google Calendar, and Gmail via community MCP servers. Two more agents.
 
 ### Session 6 - Cross-references + polish
-Correlates findings across agents, adds run persistence to `runs/`, and adds `--quiet`, `--json`, and `--no-persist` flags.
+Correlates findings across agents (e.g., a major Node upgrade flagged by both devenv and a GitHub PR). Adds run persistence to `runs/`.
 
 ### Session 7 - Evals + governance
 Eval suite with an LLM judge, read-only scope enforcement, max tool call limits, and execution logging.

@@ -8,7 +8,7 @@ from mcp import ClientSession
 from mcp.client.stdio import stdio_client
 
 from morning_agents.agents.base import BaseAgent
-from morning_agents.config import SERVER_REGISTRY
+from morning_agents.config import SERVER_REGISTRY, VERSION
 from morning_agents.contracts.models import (
     AgentResult,
     AgentStatus,
@@ -29,7 +29,7 @@ class ServerManager:
 
     def __init__(self) -> None:
         self._sessions: dict[str, ClientSession] = {}
-        self._contexts: list[Any] = []
+        self._contexts: list[Any] = []  # anyio cancel scopes must be exited in their own task
 
     @property
     def active_server_names(self) -> set[str]:
@@ -125,7 +125,7 @@ class Orchestrator:
             by_severity[f.severity.value] = by_severity.get(f.severity.value, 0) + 1
 
         return BriefingOutput(
-            version="0.1.0",
+            version=VERSION,
             briefing_id=BriefingOutput.generate_id(now),
             generated_at=now,
             duration_ms=elapsed_ms(start_time, now),

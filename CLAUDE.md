@@ -8,8 +8,9 @@ Project-level instructions for Claude Code. Loaded automatically every session.
 
 - **Package manager:** `uv` — always use `uv run`, `uv add`, `uv sync`. Never pip or poetry.
 - **MCP server runtime:** `bun` — never node or npx.
-- **Run tests:** `uv run pytest evals/`
-- **Run a specific eval:** `uv run python evals/<file>.py`
+- **Run tests:** `op run --env-file=op.env -- uv run pytest evals/`
+- **Run the CLI:** `op run --env-file=op.env -- uv run morning-agents`
+- **Secrets:** API keys live in `op.env` as `op://` references. Never put real keys in any file.
 
 ---
 
@@ -27,19 +28,26 @@ Project-level instructions for Claude Code. Loaded automatically every session.
 - `morning_agents/contracts/models.py` — source of truth for all data shapes. Change models here first.
 - `morning_agents/agents/` — one file per agent, all inherit `BaseAgent`
 - `morning_agents/skills/` — pure functions, no agent logic
+- `morning_agents/config.py` — SERVER_REGISTRY, MODEL, VERSION constants
 - `mcp-servers/` — TypeScript/Bun only, one folder per server
 - `evals/` — integration tests, not unit tests
 
 ---
 
-## Claude Model
+## Known constraints
 
-Use `claude-sonnet-4-6` for all agent reasoning calls.
+- **anyio cancel scopes** cannot be exited in a different task than they were entered. The MCP SDK uses anyio task groups internally. `ServerManager` uses manual `__aenter__`/`__aexit__` with exception swallowing in `shutdown()` — this is intentional, not a bug. Do not replace with `AsyncExitStack`.
+
+---
+
+## Claude model
+
+Use `claude-sonnet-4-6` for all agent reasoning calls. Defined as `MODEL` in `config.py`.
 
 ---
 
 ## Behavior
 
-- After completing code changes, run `/simplify` to review for quality and simplification.
+- Run `/simplify` before every commit.
 - Keep solutions minimal — don't add features or refactor beyond what's asked.
 - Don't create new files unless necessary.
