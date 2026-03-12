@@ -2,26 +2,28 @@
 
 A CLI tool that runs agents every morning and prints a terminal briefing: Homebrew health, dev tool versions, GitHub PRs, and your day ahead.
 
-Python is the brains. TypeScript/Bun is the hands.
+Python is the brains. TypeScript/Bun is the hands. Third-party Go binaries are welcome too.
 
 ---
 
-## What's here (Sessions 1-4)
+## What's here (Sessions 1-5)
 
 ### Architecture
 
-A Python orchestrator spawns TypeScript MCP servers as child processes over stdio. Each agent declares which servers it needs; the orchestrator starts them concurrently and hands off connected sessions.
+A Python orchestrator spawns MCP servers as child processes over stdio. Each agent declares which servers it needs; the orchestrator starts them concurrently and hands off connected sessions.
 
 ```
 morning-agents (Python CLI)
     └── Orchestrator
-            ├── ServerManager  ←→  stdio  ←→  homebrew-mcp (Bun)
-            │                                  devenv-mcp (Bun)
+            ├── ServerManager  ←→  stdio  ←→  homebrew-mcp (Bun/TS)
+            │                  ←→  stdio  ←→  devenv-mcp (Bun/TS)
+            │                  ←→  stdio  ←→  github-mcp-server (Go binary)
             ├── BrewmasterAgent → Finding[]
-            └── DevEnvAgent     → Finding[]
+            ├── DevEnvAgent     → Finding[]
+            └── PRQueueAgent    → Finding[]
 ```
 
-Both agents run concurrently by default. Adding a new agent requires only a new agent file — the orchestrator, renderer, and CLI are agent-agnostic.
+All three agents run concurrently by default. MCP servers can be written in any language — this codebase uses TypeScript/Bun for custom servers and the official GitHub MCP Go binary, demonstrating MCP's language-agnostic value.
 
 ### homebrew-mcp
 
@@ -46,6 +48,12 @@ A TypeScript MCP server (`mcp-servers/devenv-mcp/index.ts`) that checks dev tool
 
 Each tool runs a local `spawn` call and a version API fetch concurrently. Gracefully handles tools that are not installed.
 
+### github-mcp-server
+
+The official GitHub MCP server (`github-mcp-server stdio`) — a Go binary installed via Homebrew. Exposes GitHub's API as MCP tools.
+
+Configured with `GITHUB_TOOLSETS=pull_requests,notifications` (restricts to only the tools we need) and `GITHUB_READ_ONLY=1`.
+
 ### Brewmaster agent
 
 Calls homebrew-mcp tools concurrently, sends results to Claude for analysis, classifies version jumps (patch/minor/major), and produces structured `Finding` objects with severity labels.
@@ -53,6 +61,10 @@ Calls homebrew-mcp tools concurrently, sends results to Claude for analysis, cla
 ### DevEnv agent
 
 Calls all four devenv-mcp tools concurrently, sends results to Claude for analysis, classifies version jumps, and produces `Finding` objects. The local semver classifier is authoritative; Claude's value is the fallback for non-semver version strings.
+
+### PR Queue agent
+
+Calls `search_pull_requests` twice concurrently — once for PRs awaiting your review, once for your own open PRs. Deduplicates, enriches with relative timestamps ("3 days ago"), and sends combined data to Claude for triage. Maps Claude's severity classification directly to `Finding` objects. Produces a single all-clear info finding if no PRs need attention.
 
 ### Orchestrator
 
@@ -84,13 +96,15 @@ morning-agents/
 │   ├── agents/
 │   │   ├── base.py             # BaseAgent ABC
 │   │   ├── brewmaster.py       # Homebrew agent
-│   │   └── devenv.py           # Dev tool versions agent
+│   │   ├── devenv.py           # Dev tool versions agent
+│   │   └── pr_queue.py         # GitHub PR triage agent
 │   ├── contracts/
 │   │   └── models.py           # Pydantic models (Finding, AgentResult, etc.)
 │   ├── skills/
 │   │   ├── mcp_utils.py        # call_tool, parse_tool_result, strip_fences
 │   │   ├── semver.py           # Version jump classification
 │   │   ├── severity.py         # Severity mapping
+│   │   ├── time_context.py     # relative_time() utility
 │   │   └── timing.py           # ms_timer, elapsed_ms
 │   ├── cli.py                  # Typer CLI + Rich renderer
 │   ├── config.py               # SERVER_REGISTRY, MODEL, VERSION
@@ -98,7 +112,10 @@ morning-agents/
 ├── evals/
 │   ├── test_brewmaster.py      # Brewmaster integration tests
 │   ├── test_devenv.py          # DevEnv integration tests
-│   └── test_orchestrator.py    # Orchestrator integration tests
+│   ├── test_homebrew_mcp.py    # homebrew-mcp contract tests
+│   ├── test_orchestrator.py    # Orchestrator integration tests
+│   ├── test_pr_queue.py        # PR Queue integration tests
+│   └── test_time_context.py    # time_context unit tests
 ├── pyproject.toml
 └── .python-version             # 3.13.12
 ```
@@ -115,12 +132,23 @@ uv sync --dev
 
 # TypeScript MCP servers
 cd mcp-servers && bun install
+
+# GitHub MCP server (Go binary)
+brew install github-mcp-server
+```
+
+**Secrets:** Copy `op.env` entries to your 1Password vault, or export the variables directly:
+
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+export GITHUB_TOKEN=ghp_...
+export GITHUB_USERNAME=your-github-username
 ```
 
 ## Running
 
 ```bash
-# Needs ANTHROPIC_API_KEY — use 1Password or export directly
+# Needs ANTHROPIC_API_KEY, GITHUB_TOKEN, GITHUB_USERNAME — use 1Password or export directly
 op run --env-file=op.env -- uv run morning-agents
 
 # Options
@@ -128,7 +156,7 @@ morning-agents --help
 morning-agents --quiet              # titles only, no detail lines
 morning-agents --no-parallel        # run agents sequentially
 morning-agents -a brewmaster        # run a specific agent (repeat for multiple)
-morning-agents -a brewmaster -a devenv  # run both explicitly
+morning-agents -a brewmaster -a devenv  # run two agents explicitly
 
 # JSON output is always written to stdout. Capture or redirect as needed:
 op run --env-file=op.env -- uv run morning-agents > briefing.json
@@ -140,15 +168,17 @@ op run --env-file=op.env -- uv run morning-agents > briefing.json
 op run --env-file=op.env -- uv run pytest evals/ -v
 ```
 
+31 tests total (as of session 5). Integration tests require `ANTHROPIC_API_KEY` and `GITHUB_TOKEN`. The `test_time_context.py` tests are pure unit tests and need no secrets.
+
 ---
 
 ## Where it's going
 
 ### ~~Session 4 - devenv-mcp + DevEnv agent~~ (complete)
-Second MCP server checking Xcode, VS Code, Node, and Python versions against latest. Runs alongside Brewmaster concurrently. Both agents are now the default.
+Second MCP server checking Xcode, VS Code, Node, and Python versions against latest. Runs alongside Brewmaster concurrently.
 
-### Session 5 - Community MCPs + PR Queue + Day Ahead
-GitHub (PR review queue), Google Calendar, and Gmail via community MCP servers. Two more agents.
+### ~~Session 5 - GitHub MCP + PR Queue~~ (complete)
+PR Queue agent using the official `github-mcp-server` Go binary. Searches for PRs awaiting review and open PRs authored by you. All three agents run concurrently by default.
 
 ### Session 6 - Cross-references + polish
 Correlates findings across agents (e.g., a major Node upgrade flagged by both devenv and a GitHub PR). Adds run persistence to `runs/`.
