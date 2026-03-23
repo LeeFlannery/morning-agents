@@ -29,5 +29,8 @@ op.env
 .claude/
 CLAUDE.md
 
+# MkDocs build output
+site/
+
 # Scratch / local experiments
 scratch/

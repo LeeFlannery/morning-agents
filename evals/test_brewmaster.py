@@ -22,7 +22,9 @@ async def result(agent) -> AgentResult:
     async with stdio_client(HOMEBREW_MCP) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()
-            return await agent.run({"homebrew-mcp": session})
+            r = await agent.run({"homebrew-mcp": session})
+            r.compute_summary()
+            return r
 
 
 async def test_brewmaster_returns_agent_result(result):

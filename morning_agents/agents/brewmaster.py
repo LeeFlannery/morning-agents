@@ -112,6 +112,7 @@ class BrewmasterAgent(BaseAgent):
                 title=f"{pkg.get('package', '?')}: {current} → {latest} ({jump})",
                 detail=pkg.get("detail", ""),
                 metadata={
+                    "tool_id": pkg.get("package", "").lower(),
                     "package": pkg.get("package"),
                     "current_version": current,
                     "latest_version": latest,
@@ -129,7 +130,7 @@ class BrewmasterAgent(BaseAgent):
                 severity=Severity.warning,
                 title=f"brew doctor: {warning[:60]}{'...' if len(warning) > 60 else ''}",
                 detail=warning,
-                metadata={"source": "brew_doctor"},
+                metadata={"tool_id": "brew_doctor", "source": "brew_doctor"},
                 timestamp=now,
             ))
 
@@ -141,12 +142,12 @@ class BrewmasterAgent(BaseAgent):
                 severity=Severity.info,
                 title="Homebrew is up to date",
                 detail="No outdated packages and brew doctor reports no issues.",
-                metadata={},
+                metadata={"tool_id": "homebrew"},
                 timestamp=now,
             ))
 
         completed_at = datetime.now(tz=timezone.utc)
-        result = AgentResult(
+        return AgentResult(
             agent_name=self.name,
             agent_display_name=self.display_name,
             status=AgentStatus.success,
@@ -156,5 +157,3 @@ class BrewmasterAgent(BaseAgent):
             findings=findings,
             tool_calls=tool_calls,
         )
-        result.compute_summary()
-        return result

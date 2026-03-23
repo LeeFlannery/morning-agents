@@ -9,7 +9,6 @@ dependencies = [
     "pydantic",
     "rich",
     "typer",
-    "pyyaml",
     "semver",
 ]
 

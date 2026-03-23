@@ -22,7 +22,9 @@ async def result(agent) -> AgentResult:
     async with stdio_client(DEVENV_MCP) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()
-            return await agent.run({"devenv-mcp": session})
+            r = await agent.run({"devenv-mcp": session})
+            r.compute_summary()
+            return r
 
 
 async def test_devenv_returns_agent_result(result):
