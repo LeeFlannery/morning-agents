@@ -4,6 +4,8 @@ A CLI tool that runs agents every morning and prints a terminal briefing: Homebr
 
 Python is the brains. TypeScript/Bun is the hands. Third-party Go binaries are welcome too.
 
+**[Documentation →](https://leeflannery.github.io/morning-agents/)**
+
 ---
 
 ## What's here (Sessions 1-5)
