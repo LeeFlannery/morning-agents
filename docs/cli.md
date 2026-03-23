@@ -1,5 +1,21 @@
 # CLI Reference
 
+## Installation
+
+```bash
+uv tool install .
+```
+
+Installs `morning-agents` globally into uv's tool environment and adds it to your PATH. Run once from the project directory — after that it works anywhere, no venv activation needed.
+
+To update after pulling new changes:
+
+```bash
+uv tool install . --reinstall
+```
+
+---
+
 Entry point: `morning-agents`
 
 ---

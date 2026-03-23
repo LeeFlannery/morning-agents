@@ -17,6 +17,7 @@ theme:
 
 nav:
   - Home: index.md
+  - Quickstart: quickstart.md
   - Architecture: architecture.md
   - Agents: agents.md
   - Contracts: contracts.md

@@ -5,27 +5,11 @@ A CLI tool that runs a structured morning briefing. Agents run in parallel, each
 ## Quick Start
 
 ```bash
-# Run the full briefing
+uv tool install .
 morning-agents
-
-# Suppress detail lines
-morning-agents --quiet
-
-# Run specific agents only
-morning-agents --agent brewmaster --agent devenv
-
-# Output JSON only (no Rich rendering)
-morning-agents --json
-
-# View run history
-morning-agents history
-
-# Re-render the most recent run
-morning-agents last
-
-# Show a specific run
-morning-agents show brief-2026-03-23-091500
 ```
+
+See the [Quickstart guide](quickstart.md) for full setup instructions.
 
 ## What It Does
 
