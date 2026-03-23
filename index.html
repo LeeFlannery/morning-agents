@@ -12,7 +12,7 @@
       
       
       
-        <link rel="next" href="architecture/">
+        <link rel="next" href="quickstart/">
       
       
         
@@ -200,6 +200,25 @@
     
   
   Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="quickstart/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Quickstart
 
       </a>
     </li>
@@ -490,6 +509,33 @@
   
   
     <li class="md-nav__item">
+      <a href="quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="architecture/" class="md-nav__link">
         
   
@@ -738,27 +784,10 @@
 <h1 id="morning-agents">morning-agents<a class="headerlink" href="#morning-agents" title="Permanent link">&para;</a></h1>
 <p>A CLI tool that runs a structured morning briefing. Agents run in parallel, each backed by an MCP server, and produce <code>Finding</code> objects. Results are correlated across agents, persisted to <code>runs/</code>, and rendered to the terminal via Rich — with JSON always going to stdout for piping.</p>
 <h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="c1"># Run the full briefing</span>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>.
 morning-agents
-
-<span class="c1"># Suppress detail lines</span>
-morning-agents<span class="w"> </span>--quiet
-
-<span class="c1"># Run specific agents only</span>
-morning-agents<span class="w"> </span>--agent<span class="w"> </span>brewmaster<span class="w"> </span>--agent<span class="w"> </span>devenv
-
-<span class="c1"># Output JSON only (no Rich rendering)</span>
-morning-agents<span class="w"> </span>--json
-
-<span class="c1"># View run history</span>
-morning-agents<span class="w"> </span><span class="nb">history</span>
-
-<span class="c1"># Re-render the most recent run</span>
-morning-agents<span class="w"> </span>last
-
-<span class="c1"># Show a specific run</span>
-morning-agents<span class="w"> </span>show<span class="w"> </span>brief-2026-03-23-091500
 </code></pre></div>
+<p>See the <a href="quickstart/">Quickstart guide</a> for full setup instructions.</p>
 <h2 id="what-it-does">What It Does<a class="headerlink" href="#what-it-does" title="Permanent link">&para;</a></h2>
 <p>Each run:</p>
 <ol>
