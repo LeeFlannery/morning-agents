@@ -123,11 +123,11 @@ class PRQueueAgent(BaseAgent):
                 severity=Severity.info,
                 title="No PRs need your attention",
                 detail="No PRs awaiting review and no open PRs authored by you.",
-                metadata={},
+                metadata={"tool_id": "github_pr"},
                 timestamp=now,
             ))
             completed_at = datetime.now(tz=timezone.utc)
-            result = AgentResult(
+            return AgentResult(
                 agent_name=self.name,
                 agent_display_name=self.display_name,
                 status=AgentStatus.success,
@@ -137,8 +137,6 @@ class PRQueueAgent(BaseAgent):
                 findings=findings,
                 tool_calls=tool_calls,
             )
-            result.compute_summary()
-            return result
 
         # ── Step 3: enrich PR data with relative timestamps ───────────────────
         enriched = []
@@ -209,6 +207,7 @@ class PRQueueAgent(BaseAgent):
                 title=f"{item.get('repo', '?')}#{item.get('pr_id', '?')}: {item.get('title', '?')}",
                 detail=item.get("detail", ""),
                 metadata={
+                    "tool_id": "github_pr",
                     "pr_id": item.get("pr_id"),
                     "repo": item.get("repo"),
                     "url": item.get("url"),
@@ -225,12 +224,12 @@ class PRQueueAgent(BaseAgent):
                 severity=Severity.info,
                 title="No PRs need your attention",
                 detail="All PRs are in good shape.",
-                metadata={},
+                metadata={"tool_id": "github_pr"},
                 timestamp=now,
             ))
 
         completed_at = datetime.now(tz=timezone.utc)
-        result = AgentResult(
+        return AgentResult(
             agent_name=self.name,
             agent_display_name=self.display_name,
             status=AgentStatus.success,
@@ -240,5 +239,3 @@ class PRQueueAgent(BaseAgent):
             findings=findings,
             tool_calls=tool_calls,
         )
-        result.compute_summary()
-        return result

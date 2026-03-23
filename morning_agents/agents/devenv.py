@@ -23,6 +23,13 @@ from morning_agents.skills.timing import elapsed_ms, ms_timer
 
 _client = anthropic.AsyncAnthropic()
 
+_TOOL_ID_MAP = {
+    "check_xcode_version": "xcode",
+    "check_vscode_version": "vscode",
+    "check_node_version": "node",
+    "check_python_version": "python",
+}
+
 
 class DevEnvAgent(BaseAgent):
     name = "devenv"
@@ -37,7 +44,7 @@ class DevEnvAgent(BaseAgent):
             "assess impact, and recommend action if an update is needed. "
             "Be concise and specific. "
             "Always respond with valid JSON matching this shape:\n"
-            '{"findings": [{"tool": str, "installed": str, "latest": str, '
+            '{"findings": [{"tool": str, "tool_id": str, "installed": str, "latest": str, '
             '"jump": "patch"|"minor"|"major"|"current"|"unknown"|"not_installed", '
             '"detail": str}]}'
         )
@@ -65,15 +72,12 @@ class DevEnvAgent(BaseAgent):
         python = parse_tool_result(python_result)
 
         # ── Step 2: Claude reasoning ──────────────────────────────────────────
-        user_content = (
-            "Dev tool versions:\n"
-            + json.dumps({
-                "xcode": xcode,
-                "vscode": vscode,
-                "node": node,
-                "python": python,
-            }, indent=2)
-        )
+        user_content = "Dev tool versions:\n" + json.dumps({
+            "xcode": {**xcode, "tool_id": "xcode"},
+            "vscode": {**vscode, "tool_id": "vscode"},
+            "node": {**node, "tool_id": "node"},
+            "python": {**python, "tool_id": "python"},
+        }, indent=2)
 
         with ms_timer() as elapsed:
             response = await _client.messages.create(
@@ -107,6 +111,7 @@ class DevEnvAgent(BaseAgent):
             installed = item.get("installed", "?")
             latest = item.get("latest", "?")
             jump = item.get("jump", "unknown")
+            tool_id = item.get("tool_id") or _TOOL_ID_MAP.get(item.get("tool", ""), "unknown")
 
             if installed == "not_installed":
                 severity = Severity.warning
@@ -127,6 +132,7 @@ class DevEnvAgent(BaseAgent):
                 title=f"{tool_name}: {installed} → {latest} ({jump})" if installed != "not_installed" else f"{tool_name}: not installed",
                 detail=item.get("detail", ""),
                 metadata={
+                    "tool_id": tool_id,
                     "tool": tool_name,
                     "installed_version": installed,
                     "latest_version": latest,
@@ -144,12 +150,12 @@ class DevEnvAgent(BaseAgent):
                 severity=Severity.info,
                 title="Dev environment is up to date",
                 detail="All checked tools are current.",
-                metadata={},
+                metadata={"tool_id": "devenv"},
                 timestamp=now,
             ))
 
         completed_at = datetime.now(tz=timezone.utc)
-        result = AgentResult(
+        return AgentResult(
             agent_name=self.name,
             agent_display_name=self.display_name,
             status=AgentStatus.success,
@@ -159,5 +165,3 @@ class DevEnvAgent(BaseAgent):
             findings=findings,
             tool_calls=tool_calls,
         )
-        result.compute_summary()
-        return result

@@ -18,6 +18,8 @@ from morning_agents.contracts.models import (
     BriefingSummary,
     FindingSummary,
 )
+from morning_agents.persistence import persist_briefing
+from morning_agents.skills.cross_reference import find_cross_references
 from morning_agents.skills.timing import elapsed_ms
 
 
@@ -85,10 +87,12 @@ class Orchestrator:
         agents: list[BaseAgent],
         quiet_mode: bool = False,
         parallel: bool = True,
+        persist: bool = True,
     ) -> None:
         self.agents = agents
         self.quiet_mode = quiet_mode
         self.parallel = parallel
+        self.persist = persist
 
     async def run(self) -> BriefingOutput:
         start_time = datetime.now(timezone.utc)
@@ -125,13 +129,15 @@ class Orchestrator:
         for f in all_findings:
             by_severity[f.severity.value] = by_severity.get(f.severity.value, 0) + 1
 
-        return BriefingOutput(
+        cross_refs = find_cross_references(results)
+
+        output = BriefingOutput(
             version=VERSION,
             briefing_id=BriefingOutput.generate_id(now),
             generated_at=now,
             duration_ms=elapsed_ms(start_time, now),
             agent_results=results,
-            cross_references=[],
+            cross_references=cross_refs,
             summary=BriefingSummary(
                 agents_run=len(results),
                 agents_succeeded=len(succeeded),
@@ -145,6 +151,11 @@ class Orchestrator:
                 quiet_mode=self.quiet_mode,
             ),
         )
+
+        if self.persist:
+            persist_briefing(output)
+
+        return output
 
     async def _run_agent_safe(
         self, agent: BaseAgent, server_manager: ServerManager
