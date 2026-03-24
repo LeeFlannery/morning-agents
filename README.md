@@ -1,18 +1,18 @@
 # Morning Agents
 
-A CLI morning briefing tool powered by Claude and MCP. Every morning, a set of agents runs in parallel, each backed by an MCP server, and produces a structured terminal briefing: Homebrew health, dev tool versions, GitHub PRs, and anything else you wire up.
+A CLI morning briefing tool powered by Claude and MCP. Every morning, a set of agents runs in parallel, each backed by an MCP server, and drops a structured terminal briefing: Homebrew health, dev tool versions, GitHub PRs, and anything else you wire up.
 
-Inspired by Julia Cameron's [morning pages](https://www.amazon.com/Artists-Way-25th-Anniversary/dp/0143129252) from *The Artist's Way* — a daily practice of clearing your head before you start work. Same idea, different medium.
+Inspired by Julia Cameron's ["Morning Pages"](https://www.amazon.com/Artists-Way-25th-Anniversary/dp/0143129252) from *The Artist's Way*. Same idea, different medium.
 
 Python is the brains. TypeScript/Bun is the hands. Third-party Go binaries are welcome too.
 
-**[Documentation →](https://leeflannery.github.io/morning-agents/)**
+**[Documentation](https://leeflannery.github.io/morning-agents/)**
 
 ---
 
 ## Architecture
 
-A Python orchestrator spawns MCP servers as child processes over stdio. Each agent declares which servers it needs; the orchestrator starts them concurrently and hands off connected sessions.
+A Python orchestrator spawns MCP servers as child processes over stdio. Each agent declares which servers it needs, the orchestrator starts them concurrently, and hands off connected sessions.
 
 ```
 morning-agents (Python CLI)
@@ -25,7 +25,7 @@ morning-agents (Python CLI)
             └── PRQueueAgent    → Finding[]
 ```
 
-All three agents run concurrently by default. MCP servers can be written in any language — this codebase uses TypeScript/Bun for custom servers and the official GitHub MCP Go binary.
+All three agents run concurrently by default. MCP servers can be written in any language. This repo uses TypeScript/Bun for custom servers and the official GitHub MCP Go binary.
 
 ## Agents
 
@@ -37,14 +37,14 @@ All three agents run concurrently by default. MCP servers can be written in any 
 
 ## Output
 
-Progress and Rich rendering go to stderr. JSON (`BriefingOutput`) goes to stdout — pipeable and scriptable.
+Rich rendering goes to stderr. JSON (`BriefingOutput`) goes to stdout, pipeable and scriptable.
 
 ```bash
 morning-agents | jq '.summary'
 morning-agents > briefing.json
 ```
 
-Each run is persisted to `runs/` and viewable with `morning-agents history`.
+Every run is persisted to `runs/` and viewable with `morning-agents history`.
 
 ---
 
@@ -63,7 +63,7 @@ brew install github-mcp-server
 uv tool install .
 ```
 
-**Secrets required:**
+**Secrets:**
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...
@@ -71,13 +71,13 @@ export GITHUB_TOKEN=ghp_...
 export GITHUB_USERNAME=your-github-username
 ```
 
-Then just run:
+Then run:
 
 ```bash
 morning-agents
 ```
 
-See the [Quickstart](https://leeflannery.github.io/morning-agents/quickstart/) for full setup instructions.
+Full setup in the [Quickstart](https://leeflannery.github.io/morning-agents/quickstart/).
 
 ---
 
@@ -87,6 +87,6 @@ See the [Quickstart](https://leeflannery.github.io/morning-agents/quickstart/) f
 uv run pytest evals/ -v
 ```
 
-Unit tests (no secrets needed): `test_persistence.py`, `test_cross_reference.py`, `test_time_context.py`
+Unit tests (no secrets): `test_persistence.py`, `test_cross_reference.py`, `test_time_context.py`
 
-Integration tests (require `ANTHROPIC_API_KEY` and `GITHUB_TOKEN`): `test_brewmaster.py`, `test_devenv.py`, `test_pr_queue.py`
+Integration tests (need `ANTHROPIC_API_KEY` and `GITHUB_TOKEN`): `test_brewmaster.py`, `test_devenv.py`, `test_pr_queue.py`
