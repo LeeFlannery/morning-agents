@@ -5,12 +5,12 @@
 ```
 CLI (cli.py)
   └─ Orchestrator (orchestrator.py)
-       ├─ ServerManager — starts MCP servers, gives agents ClientSession objects
-       ├─ [Agent, Agent, Agent] — run in parallel via asyncio.gather
+       ├─ ServerManager (starts MCP servers, gives agents ClientSession objects)
+       ├─ [Agent, Agent, Agent] (run in parallel via asyncio.gather)
        │    └─ BaseAgent.run() → AgentResult (list[Finding])
-       ├─ find_cross_references() — correlates findings across agents
-       ├─ persist_briefing() — writes runs/brief-YYYY-MM-DD-HHMMSS.json
-       └─ BriefingOutput — the final contract, JSON to stdout
+       ├─ find_cross_references() (correlates findings across agents)
+       ├─ persist_briefing() (writes runs/brief-YYYY-MM-DD-HHMMSS.json)
+       └─ BriefingOutput (the final contract, JSON to stdout)
 ```
 
 ## Components

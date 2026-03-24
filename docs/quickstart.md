@@ -63,7 +63,7 @@ uv tool install . --reinstall
 morning-agents
 ```
 
-Progress renders to your terminal. JSON output goes to stdout — pipe or redirect as needed:
+Progress renders to your terminal. JSON output goes to stdout. Pipe or redirect as needed:
 
 ```bash
 morning-agents | jq '.summary'

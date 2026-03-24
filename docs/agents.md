@@ -8,8 +8,8 @@
 
 Checks Homebrew package health. Calls two MCP tools concurrently:
 
-- `list_outdated_packages` — returns packages with current/latest versions
-- `run_brew_doctor` — returns warning strings
+- `list_outdated_packages`: returns packages with current/latest versions
+- `run_brew_doctor`: returns warning strings
 
 Passes results to Claude for severity assessment. Classifies version jumps (patch/minor/major) via `semver.classify()`.
 

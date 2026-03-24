@@ -1,6 +1,6 @@
 # morning-agents
 
-A CLI tool that runs a structured morning briefing. Agents run in parallel, each backed by an MCP server, and produce `Finding` objects. Results are correlated across agents, persisted to `runs/`, and rendered to the terminal via Rich — with JSON always going to stdout for piping.
+A CLI tool that runs a structured morning briefing. Agents run in parallel, each backed by an MCP server, and produce `Finding` objects. Results are correlated across agents, persisted to `runs/`, and rendered to the terminal via Rich. JSON always goes to stdout for piping.
 
 ## Quick Start
 

@@ -101,7 +101,7 @@ The top-level output contract. Everything else is nested here.
 
 ### Supporting Models
 
-**`ToolCall`** — records a single MCP tool or API call:
+**`ToolCall`** records a single MCP tool or API call:
 
 ```python
 class ToolCall(BaseModel):
@@ -111,7 +111,7 @@ class ToolCall(BaseModel):
     success: bool
 ```
 
-**`FindingSummary`** — per-agent finding counts:
+**`FindingSummary`** stores per-agent finding counts:
 
 ```python
 class FindingSummary(BaseModel):
@@ -119,7 +119,7 @@ class FindingSummary(BaseModel):
     by_severity: dict[str, int]
 ```
 
-**`BriefingSummary`** — briefing-level stats:
+**`BriefingSummary`** stores briefing-level stats:
 
 ```python
 class BriefingSummary(BaseModel):

@@ -6,7 +6,7 @@
 uv tool install .
 ```
 
-Installs `morning-agents` globally into uv's tool environment and adds it to your PATH. Run once from the project directory — after that it works anywhere, no venv activation needed.
+Installs `morning-agents` globally into uv's tool environment and adds it to your PATH. Run once from the project directory. After that it works anywhere, no venv activation needed.
 
 To update after pulling new changes:
 
@@ -95,8 +95,8 @@ Run IDs are shown in `morning-agents history` output and are also the filenames 
 
 ## Output
 
-- **stderr** — Rich-rendered briefing (human-readable)
-- **stdout** — `BriefingOutput` JSON (pipeable)
+- **stderr**: Rich-rendered briefing (human-readable)
+- **stdout**: `BriefingOutput` JSON (pipeable)
 
 Exit code `1` if any agent errored.
 
