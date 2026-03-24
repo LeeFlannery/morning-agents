@@ -853,7 +853,7 @@
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>.
 </code></pre></div>
-<p>Installs <code>morning-agents</code> globally into uv's tool environment and adds it to your PATH. Run once from the project directory — after that it works anywhere, no venv activation needed.</p>
+<p>Installs <code>morning-agents</code> globally into uv's tool environment and adds it to your PATH. Run once from the project directory. After that it works anywhere, no venv activation needed.</p>
 <p>To update after pulling new changes:</p>
 <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>.<span class="w"> </span>--reinstall
 </code></pre></div>
@@ -951,8 +951,8 @@ morning-agents<span class="w"> </span>--no-persist
 <hr />
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>stderr</strong> — Rich-rendered briefing (human-readable)</li>
-<li><strong>stdout</strong> — <code>BriefingOutput</code> JSON (pipeable)</li>
+<li><strong>stderr</strong>: Rich-rendered briefing (human-readable)</li>
+<li><strong>stdout</strong>: <code>BriefingOutput</code> JSON (pipeable)</li>
 </ul>
 <p>Exit code <code>1</code> if any agent errored.</p>
 <hr />

@@ -768,8 +768,8 @@
 <strong>Display name:</strong> <code>🍺 Brewmaster</code></p>
 <p>Checks Homebrew package health. Calls two MCP tools concurrently:</p>
 <ul>
-<li><code>list_outdated_packages</code> — returns packages with current/latest versions</li>
-<li><code>run_brew_doctor</code> — returns warning strings</li>
+<li><code>list_outdated_packages</code>: returns packages with current/latest versions</li>
+<li><code>run_brew_doctor</code>: returns warning strings</li>
 </ul>
 <p>Passes results to Claude for severity assessment. Classifies version jumps (patch/minor/major) via <code>semver.classify()</code>.</p>
 <p><strong>Finding metadata keys:</strong></p>

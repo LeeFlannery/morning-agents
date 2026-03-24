@@ -1160,19 +1160,19 @@
 </table>
 <hr />
 <h3 id="supporting-models">Supporting Models<a class="headerlink" href="#supporting-models" title="Permanent link">&para;</a></h3>
-<p><strong><code>ToolCall</code></strong> — records a single MCP tool or API call:</p>
+<p><strong><code>ToolCall</code></strong> records a single MCP tool or API call:</p>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ToolCall</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="n">tool</span><span class="p">:</span> <span class="nb">str</span>         <span class="c1"># tool name</span>
     <span class="n">server</span><span class="p">:</span> <span class="nb">str</span>       <span class="c1"># &quot;homebrew-mcp&quot;, &quot;anthropic&quot;, etc.</span>
     <span class="n">duration_ms</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">success</span><span class="p">:</span> <span class="nb">bool</span>
 </code></pre></div>
-<p><strong><code>FindingSummary</code></strong> — per-agent finding counts:</p>
+<p><strong><code>FindingSummary</code></strong> stores per-agent finding counts:</p>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">FindingSummary</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="n">total</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">by_severity</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
 </code></pre></div>
-<p><strong><code>BriefingSummary</code></strong> — briefing-level stats:</p>
+<p><strong><code>BriefingSummary</code></strong> stores briefing-level stats:</p>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">BriefingSummary</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="n">agents_run</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">agents_succeeded</span><span class="p">:</span> <span class="nb">int</span>

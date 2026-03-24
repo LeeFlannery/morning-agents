@@ -931,12 +931,12 @@
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>CLI (cli.py)
   └─ Orchestrator (orchestrator.py)
-       ├─ ServerManager — starts MCP servers, gives agents ClientSession objects
-       ├─ [Agent, Agent, Agent] — run in parallel via asyncio.gather
+       ├─ ServerManager (starts MCP servers, gives agents ClientSession objects)
+       ├─ [Agent, Agent, Agent] (run in parallel via asyncio.gather)
        │    └─ BaseAgent.run() → AgentResult (list[Finding])
-       ├─ find_cross_references() — correlates findings across agents
-       ├─ persist_briefing() — writes runs/brief-YYYY-MM-DD-HHMMSS.json
-       └─ BriefingOutput — the final contract, JSON to stdout
+       ├─ find_cross_references() (correlates findings across agents)
+       ├─ persist_briefing() (writes runs/brief-YYYY-MM-DD-HHMMSS.json)
+       └─ BriefingOutput (the final contract, JSON to stdout)
 </code></pre></div>
 <h2 id="components">Components<a class="headerlink" href="#components" title="Permanent link">&para;</a></h2>
 <h3 id="cli-morning_agentsclipy">CLI (<code>morning_agents/cli.py</code>)<a class="headerlink" href="#cli-morning_agentsclipy" title="Permanent link">&para;</a></h3>
