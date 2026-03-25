@@ -541,10 +541,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#orchestrator-morning_agentsorchestratorpy" class="md-nav__link">
+  <a href="#orchestrator-morning_agentsorchestrator" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Orchestrator (morning_agents/orchestrator.py)
+        Orchestrator (morning_agents/orchestrator/)
       
     </span>
   </a>
@@ -552,10 +552,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#servermanager" class="md-nav__link">
+  <a href="#resourcecontext-morning_agentsorchestratorresourcespy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ServerManager
+        ResourceContext (morning_agents/orchestrator/resources.py)
       
     </span>
   </a>
@@ -563,10 +563,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#agents-morning_agentsagents" class="md-nav__link">
+  <a href="#baseagent-morning_agentsagentsbasepy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Agents (morning_agents/agents/)
+        BaseAgent (morning_agents/agents/base.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#servermanager-morning_agentsorchestratorserver_managerpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ServerManager (morning_agents/orchestrator/server_manager.py)
       
     </span>
   </a>
@@ -605,6 +616,17 @@
     <span class="md-ellipsis">
       
         Data Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#executionmeta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ExecutionMeta
       
     </span>
   </a>
@@ -826,10 +848,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#orchestrator-morning_agentsorchestratorpy" class="md-nav__link">
+  <a href="#orchestrator-morning_agentsorchestrator" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Orchestrator (morning_agents/orchestrator.py)
+        Orchestrator (morning_agents/orchestrator/)
       
     </span>
   </a>
@@ -837,10 +859,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#servermanager" class="md-nav__link">
+  <a href="#resourcecontext-morning_agentsorchestratorresourcespy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ServerManager
+        ResourceContext (morning_agents/orchestrator/resources.py)
       
     </span>
   </a>
@@ -848,10 +870,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#agents-morning_agentsagents" class="md-nav__link">
+  <a href="#baseagent-morning_agentsagentsbasepy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Agents (morning_agents/agents/)
+        BaseAgent (morning_agents/agents/base.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#servermanager-morning_agentsorchestratorserver_managerpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ServerManager (morning_agents/orchestrator/server_manager.py)
       
     </span>
   </a>
@@ -897,6 +930,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#executionmeta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ExecutionMeta
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#stdout-vs-stderr" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -930,37 +974,88 @@
 <h1 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h1>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>CLI (cli.py)
-  └─ Orchestrator (orchestrator.py)
-       ├─ ServerManager (starts MCP servers, gives agents ClientSession objects)
-       ├─ [Agent, Agent, Agent] (run in parallel via asyncio.gather)
-       │    └─ BaseAgent.run() → AgentResult (list[Finding])
-       ├─ find_cross_references() (correlates findings across agents)
-       ├─ persist_briefing() (writes runs/brief-YYYY-MM-DD-HHMMSS.json)
-       └─ BriefingOutput (the final contract, JSON to stdout)
+  └─ Orchestrator (orchestrator/)
+       ├─ ServerManager          starts MCP servers, holds ClientSession objects
+       ├─ ResourceContext        semaphore + workspace root + briefing ID
+       ├─ execute_dag()          topological execution via graphlib.TopologicalSorter
+       │    ├─ depth 0: [BrewmasterAgent, DevEnvAgent, PRQueueAgent]  (concurrent)
+       │    └─ depth 1: [CrossRefAgent]  (receives depth-0 results as upstream)
+       ├─ persist_briefing()     writes runs/brief-YYYY-MM-DD-HHMMSS.json
+       └─ BriefingOutput         final contract, JSON to stdout
 </code></pre></div>
 <h2 id="components">Components<a class="headerlink" href="#components" title="Permanent link">&para;</a></h2>
 <h3 id="cli-morning_agentsclipy">CLI (<code>morning_agents/cli.py</code>)<a class="headerlink" href="#cli-morning_agentsclipy" title="Permanent link">&para;</a></h3>
-<p>Typer app. Parses options, constructs agents, runs the orchestrator, renders output. Subcommands (<code>history</code>, <code>last</code>, <code>show</code>) use the persistence layer directly.</p>
-<h3 id="orchestrator-morning_agentsorchestratorpy">Orchestrator (<code>morning_agents/orchestrator.py</code>)<a class="headerlink" href="#orchestrator-morning_agentsorchestratorpy" title="Permanent link">&para;</a></h3>
-<p>Manages the full briefing lifecycle:</p>
+<p>Typer app. Parses options, constructs agent classes, runs the orchestrator, renders output. Subcommands (<code>history</code>, <code>last</code>, <code>show</code>) use the persistence layer directly.</p>
+<h3 id="orchestrator-morning_agentsorchestrator">Orchestrator (<code>morning_agents/orchestrator/</code>)<a class="headerlink" href="#orchestrator-morning_agentsorchestrator" title="Permanent link">&para;</a></h3>
+<p>The orchestrator package has four modules:</p>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>orchestrator.py</code></td>
+<td>Briefing lifecycle: setup, DAG execution, result assembly, persist</td>
+</tr>
+<tr>
+<td><code>dag_executor.py</code></td>
+<td><code>execute_dag()</code> — topological sort, concurrency, failure isolation</td>
+</tr>
+<tr>
+<td><code>server_manager.py</code></td>
+<td>MCP server process lifecycle, <code>ClientSession</code> management</td>
+</tr>
+<tr>
+<td><code>resources.py</code></td>
+<td><code>ResourceContext</code> dataclass injected into every agent</td>
+</tr>
+</tbody>
+</table>
+<p><strong>DAG execution flow:</strong></p>
 <ol>
-<li>Determines which MCP servers are needed across all agents</li>
-<li>Starts those servers via <code>ServerManager</code></li>
-<li>Runs agents in parallel (or serially with <code>--no-parallel</code>)</li>
-<li>Calls <code>result.compute_summary()</code> on each <code>AgentResult</code></li>
-<li>Runs <code>find_cross_references()</code> on all results</li>
-<li>Builds <code>BriefingOutput</code></li>
-<li>Persists to <code>runs/</code> (unless <code>persist=False</code>)</li>
+<li>Build dependency graph from each agent's <code>depends_on</code></li>
+<li>Dependencies are <em>soft</em>: if a declared dependency is not in the active agent set, it is silently ignored rather than erroring (supports partial runs)</li>
+<li><code>TopologicalSorter.get_ready()</code> yields each tier of agents that have no remaining unfinished dependencies</li>
+<li>Each tier runs concurrently via <code>asyncio.gather</code></li>
+<li>Failed agents cascade: dependents are skipped and marked as errors, but independent agents still run</li>
+<li>Each <code>run()</code> call is gated by a shared <code>asyncio.Semaphore</code> (default: 4) to prevent rate-limit hammering on the Anthropic API</li>
 </ol>
-<h3 id="servermanager">ServerManager<a class="headerlink" href="#servermanager" title="Permanent link">&para;</a></h3>
-<p>Starts and shuts down MCP servers. Maps server names to <code>ClientSession</code> objects. Agents declare which servers they need via <code>mcp_servers = [...]</code>; the orchestrator deduplicates before starting.</p>
-<p>Server configs live in <code>morning_agents/config.py</code> → <code>SERVER_REGISTRY</code>.</p>
-<h3 id="agents-morning_agentsagents">Agents (<code>morning_agents/agents/</code>)<a class="headerlink" href="#agents-morning_agentsagents" title="Permanent link">&para;</a></h3>
-<p>Each agent is a subclass of <code>BaseAgent</code>. Agents receive a dict of <code>ClientSession</code> objects keyed by server name. They call MCP tools, feed results to Claude, and return an <code>AgentResult</code>.</p>
+<h3 id="resourcecontext-morning_agentsorchestratorresourcespy">ResourceContext (<code>morning_agents/orchestrator/resources.py</code>)<a class="headerlink" href="#resourcecontext-morning_agentsorchestratorresourcespy" title="Permanent link">&para;</a></h3>
+<p>Frozen dataclass injected into every agent at construction time. Holds:</p>
+<ul>
+<li><code>semaphore</code> — shared concurrency gate for API calls</li>
+<li><code>workspace_root</code> — base path for per-run agent workspaces (<code>runs/</code>)</li>
+<li><code>briefing_id</code> — current run ID (used to namespace workspaces)</li>
+<li><code>server_manager</code> — reference for agents that need direct session access</li>
+</ul>
+<p>Agents with <code>workspace_type = "scratch"</code> or <code>"persistent"</code> call <code>self.workspace</code> to get their isolated <code>runs/&lt;briefing_id&gt;/&lt;agent_name&gt;/</code> directory.</p>
+<h3 id="baseagent-morning_agentsagentsbasepy">BaseAgent (<code>morning_agents/agents/base.py</code>)<a class="headerlink" href="#baseagent-morning_agentsagentsbasepy" title="Permanent link">&para;</a></h3>
+<p>Abstract base class. Subclasses must define three class attributes:</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MyAgent</span><span class="p">(</span><span class="n">BaseAgent</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;my_agent&quot;</span>                  <span class="c1"># unique key, used in depends_on</span>
+    <span class="n">display_name</span> <span class="o">=</span> <span class="s2">&quot;My Agent&quot;</span>          <span class="c1"># shown in terminal output</span>
+    <span class="n">mcp_servers</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;some-mcp&quot;</span><span class="p">]</span>         <span class="c1"># servers this agent needs</span>
+
+    <span class="c1"># Optional:</span>
+    <span class="n">depends_on</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;other_agent&quot;</span><span class="p">]</span>       <span class="c1"># upstream agents (default: [])</span>
+    <span class="n">workspace_type</span> <span class="o">=</span> <span class="s2">&quot;scratch&quot;</span>         <span class="c1"># &quot;none&quot; | &quot;scratch&quot; | &quot;persistent&quot;</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">sessions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ClientSession</span><span class="p">],</span>
+        <span class="n">upstream</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AgentResult</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgentResult</span><span class="p">:</span> <span class="o">...</span>
+</code></pre></div>
+<p><code>upstream</code> is <code>None</code> for depth-0 agents, and <code>{agent_name: AgentResult}</code> for agents that declared <code>depends_on</code>.</p>
+<h3 id="servermanager-morning_agentsorchestratorserver_managerpy">ServerManager (<code>morning_agents/orchestrator/server_manager.py</code>)<a class="headerlink" href="#servermanager-morning_agentsorchestratorserver_managerpy" title="Permanent link">&para;</a></h3>
+<p>Starts and shuts down MCP servers as child processes over stdio. Deduplicates: if multiple agents need the same server, it starts once and shares the <code>ClientSession</code>. Server configs live in <code>config.py → SERVER_REGISTRY</code>.</p>
 <h3 id="persistence-morning_agentspersistencepy">Persistence (<code>morning_agents/persistence.py</code>)<a class="headerlink" href="#persistence-morning_agentspersistencepy" title="Permanent link">&para;</a></h3>
 <p>Saves/loads briefing runs as JSON files in <code>runs/</code>. Files are named <code>brief-YYYY-MM-DD-HHMMSS.json</code>.</p>
 <h3 id="cross-reference-engine-morning_agentsskillscross_referencepy">Cross-Reference Engine (<code>morning_agents/skills/cross_reference.py</code>)<a class="headerlink" href="#cross-reference-engine-morning_agentsskillscross_referencepy" title="Permanent link">&para;</a></h3>
-<p>Rule-based correlation. Each <code>CorrelationRule</code> receives all <code>AgentResult</code> objects and returns <code>CrossReference</code> objects. Rules are registered in <code>CORRELATION_RULES</code>.</p>
+<p>Rule-based correlation. Each <code>CorrelationRule</code> receives all <code>AgentResult</code> objects and returns <code>CrossReference</code> objects. Rules are registered in <code>CORRELATION_RULES</code>. The <code>CrossRefAgent</code> wraps this engine as a proper DAG node with <code>depends_on = ["brewmaster", "devenv", "pr_queue"]</code>.</p>
 <h2 id="data-flow">Data Flow<a class="headerlink" href="#data-flow" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>MCP tool call → raw result
   → parse_tool_result() → dict
@@ -968,10 +1063,28 @@
   → strip_fences() + json.loads() → parsed dict
   → Finding objects
   → AgentResult
-  → BriefingOutput (with cross_references + summary)
+  → DAG executor collects all AgentResults
+  → CrossRefAgent correlates findings (depth 1)
+  → BriefingOutput (agent_results + cross_references + execution metadata)
   → persist_briefing() → runs/brief-*.json
   → stdout (JSON) + stderr (Rich)
 </code></pre></div>
+<h2 id="executionmeta">ExecutionMeta<a class="headerlink" href="#executionmeta" title="Permanent link">&para;</a></h2>
+<p>Every <code>BriefingOutput</code> now includes an <code>execution</code> field:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;execution&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;stages&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[[</span><span class="s2">&quot;brewmaster&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;devenv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;pr_queue&quot;</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;cross_ref&quot;</span><span class="p">]],</span>
+<span class="w">    </span><span class="nt">&quot;dependency_graph&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;brewmaster&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+<span class="w">      </span><span class="nt">&quot;devenv&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+<span class="w">      </span><span class="nt">&quot;pr_queue&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+<span class="w">      </span><span class="nt">&quot;cross_ref&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;brewmaster&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;devenv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;pr_queue&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;retries&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>This makes the execution topology inspectable without needing to understand the source.</p>
 <h2 id="stdout-vs-stderr">Stdout vs Stderr<a class="headerlink" href="#stdout-vs-stderr" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

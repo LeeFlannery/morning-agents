@@ -566,6 +566,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#crossrefagent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CrossRefAgent
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -741,6 +752,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#crossrefagent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CrossRefAgent
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -768,8 +790,8 @@
 <strong>Display name:</strong> <code>🍺 Brewmaster</code></p>
 <p>Checks Homebrew package health. Calls two MCP tools concurrently:</p>
 <ul>
-<li><code>list_outdated_packages</code>: returns packages with current/latest versions</li>
-<li><code>run_brew_doctor</code>: returns warning strings</li>
+<li><code>list_outdated</code>: returns packages with current/latest versions</li>
+<li><code>get_doctor_status</code>: returns warning strings</li>
 </ul>
 <p>Passes results to Claude for severity assessment. Classifies version jumps (patch/minor/major) via <code>semver.classify()</code>.</p>
 <p><strong>Finding metadata keys:</strong></p>
@@ -859,11 +881,11 @@
 <h2 id="prqueueagent">PRQueueAgent<a class="headerlink" href="#prqueueagent" title="Permanent link">&para;</a></h2>
 <p><strong>File:</strong> <code>morning_agents/agents/pr_queue.py</code>
 <strong>MCP Server:</strong> <code>github-mcp</code> (<code>github-mcp-server</code> binary)
-<strong>Display name:</strong> <code>🔍 PR Queue</code></p>
-<p>Surfaces GitHub PRs that need attention. Calls:</p>
+<strong>Display name:</strong> <code>🔀 PR Queue</code></p>
+<p>Surfaces GitHub PRs that need attention. Calls <code>search_pull_requests</code> twice concurrently:</p>
 <ul>
-<li><code>list_pull_requests</code> (PRs awaiting your review)</li>
-<li><code>list_pull_requests</code> (your authored open PRs)</li>
+<li>query <code>is:pr is:open review-requested:&lt;user&gt;</code> (PRs awaiting your review)</li>
+<li>query <code>is:pr is:open author:&lt;user&gt;</code> (your authored open PRs)</li>
 </ul>
 <p>Enriches PR timestamps with relative time strings (<code>"3 days ago"</code>) via <code>time_context.relative_time()</code>. Passes enriched data to Claude for priority assessment.</p>
 <p><strong>Finding metadata keys:</strong></p>
@@ -892,12 +914,35 @@
 <td>GitHub URL</td>
 </tr>
 <tr>
-<td><code>category</code></td>
-<td><code>"needs_review"</code> / <code>"my_open_pr"</code></td>
+<td><code>source</code></td>
+<td><code>"github"</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="crossrefagent">CrossRefAgent<a class="headerlink" href="#crossrefagent" title="Permanent link">&para;</a></h2>
+<p><strong>File:</strong> <code>morning_agents/agents/cross_ref.py</code>
+<strong>MCP Server:</strong> none
+<strong>Display name:</strong> <code>🔗 Cross-Reference</code>
+<strong>Depth:</strong> 1 — <code>depends_on = ["brewmaster", "devenv", "pr_queue"]</code></p>
+<p>Runs after the three depth-0 agents complete. Receives their results as <code>upstream</code> and applies correlation rules from <code>skills/cross_reference.py</code> to find relationships across agents (e.g. a Node.js upgrade finding coinciding with Node-related open PRs).</p>
+<p>Produces <code>Finding</code> objects with <code>category = "cross_reference"</code>. Does not call the Claude API or any MCP tools — pure Python logic over upstream findings.</p>
+<p><strong>Finding metadata keys:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>source_findings</code></td>
+<td>List of finding IDs that triggered this cross-reference</td>
 </tr>
 <tr>
-<td><code>age_relative</code></td>
-<td>Relative age string</td>
+<td><code>source_agents</code></td>
+<td>List of agent names involved</td>
 </tr>
 </tbody>
 </table>

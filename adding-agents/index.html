@@ -829,6 +829,8 @@
     <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;my_agent&quot;</span>
     <span class="n">display_name</span> <span class="o">=</span> <span class="s2">&quot;🔥 My Agent&quot;</span>
     <span class="n">mcp_servers</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;some-mcp&quot;</span><span class="p">]</span>          <span class="c1"># must match SERVER_REGISTRY keys</span>
+    <span class="n">depends_on</span> <span class="o">=</span> <span class="p">[]</span>                     <span class="c1"># optional: list of agent names to wait for</span>
+    <span class="n">workspace_type</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>             <span class="c1"># &quot;none&quot; | &quot;scratch&quot; | &quot;persistent&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_system_prompt</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">(</span>
@@ -837,7 +839,7 @@
             <span class="s1">&#39;{&quot;findings&quot;: [{&quot;title&quot;: str, &quot;detail&quot;: str, &quot;severity&quot;: &quot;info&quot;|&quot;warning&quot;|&quot;action_needed&quot;}]}&#39;</span>
         <span class="p">)</span>
 
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sessions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ClientSession</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">AgentResult</span><span class="p">:</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sessions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ClientSession</span><span class="p">],</span> <span class="n">upstream</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgentResult</span><span class="p">:</span>
         <span class="n">started_at</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">tz</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
         <span class="n">session</span> <span class="o">=</span> <span class="n">sessions</span><span class="p">[</span><span class="s2">&quot;some-mcp&quot;</span><span class="p">]</span>
         <span class="n">tool_calls</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ToolCall</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
