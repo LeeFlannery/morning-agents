@@ -90,3 +90,10 @@ uv run pytest evals/ -v
 Unit tests (no secrets): `test_persistence.py`, `test_cross_reference.py`, `test_time_context.py`
 
 Integration tests (need `ANTHROPIC_API_KEY` and `GITHUB_TOKEN`): `test_brewmaster.py`, `test_devenv.py`, `test_pr_queue.py`
+
+---
+
+## License
+
+Morning Agents is licensed under the Apache License 2.0.
+Branding, site content, and related media assets are not included unless explicitly stated.
