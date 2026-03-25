@@ -12,7 +12,7 @@ Python is the brains. TypeScript/Bun is the hands. Third-party Go binaries are w
 
 ## Architecture
 
-A Python orchestrator spawns MCP servers as child processes over stdio. Each agent declares which servers it needs, the orchestrator starts them concurrently, and hands off connected sessions.
+A Python orchestrator spawns MCP servers as child processes over stdio. Agents declare dependencies on each other via `depends_on`. The orchestrator resolves the graph with `graphlib.TopologicalSorter` and runs each depth tier concurrently.
 
 ```
 morning-agents (Python CLI)
@@ -20,20 +20,26 @@ morning-agents (Python CLI)
             ├── ServerManager  ←→  stdio  ←→  homebrew-mcp (Bun/TS)
             │                  ←→  stdio  ←→  devenv-mcp (Bun/TS)
             │                  ←→  stdio  ←→  github-mcp-server (Go binary)
-            ├── BrewmasterAgent → Finding[]
-            ├── DevEnvAgent     → Finding[]
-            └── PRQueueAgent    → Finding[]
+            │
+            │  depth 0 (no deps, run concurrently)
+            ├── BrewmasterAgent  → Finding[]
+            ├── DevEnvAgent      → Finding[]
+            ├── PRQueueAgent     → Finding[]
+            │
+            │  depth 1 (waits for depth 0, receives upstream results)
+            └── CrossRefAgent    → Finding[]
 ```
 
-All three agents run concurrently by default. MCP servers can be written in any language. This repo uses TypeScript/Bun for custom servers and the official GitHub MCP Go binary.
+MCP servers can be written in any language. Agents declare `depends_on = [...]` to receive upstream results. The `ResourceContext` provides each agent with a semaphore, isolated workspace, and server access.
 
 ## Agents
 
-| Agent | MCP Server | What it checks |
-|---|---|---|
-| Brewmaster | `homebrew-mcp` (Bun/TS) | Outdated packages + `brew doctor` warnings |
-| DevEnv | `devenv-mcp` (Bun/TS) | Xcode, VSCode, Node, Python version freshness |
-| PR Queue | `github-mcp-server` (Go) | PRs awaiting your review + your open PRs |
+| Agent | MCP Server | What it checks | Depth |
+|---|---|---|---|
+| Brewmaster | `homebrew-mcp` (Bun/TS) | Outdated packages + `brew doctor` warnings | 0 |
+| DevEnv | `devenv-mcp` (Bun/TS) | Xcode, VSCode, Node, Python version freshness | 0 |
+| PR Queue | `github-mcp-server` (Go) | PRs awaiting your review + your open PRs | 0 |
+| Cross-Reference | none | Correlates findings across depth-0 agents | 1 |
 
 ## Output
 

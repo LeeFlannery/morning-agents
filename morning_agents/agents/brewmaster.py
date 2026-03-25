@@ -42,7 +42,7 @@ class BrewmasterAgent(BaseAgent):
             '"doctor_warnings": [str]}'
         )
 
-    async def run(self, sessions: dict[str, ClientSession]) -> AgentResult:
+    async def run(self, sessions: dict[str, ClientSession], upstream: dict | None = None) -> AgentResult:
         started_at = datetime.now(tz=timezone.utc)
         session = sessions["homebrew-mcp"]
         tool_calls: list[ToolCall] = []

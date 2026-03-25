@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.text import Text
 
 from morning_agents.agents.brewmaster import BrewmasterAgent
+from morning_agents.agents.cross_ref import CrossRefAgent
 from morning_agents.agents.devenv import DevEnvAgent
 from morning_agents.agents.pr_queue import PRQueueAgent
 from morning_agents.contracts.models import AgentResult, AgentStatus, BriefingOutput, Severity
@@ -17,7 +18,12 @@ from morning_agents.persistence import RUNS_DIR, get_latest_run, list_runs, load
 app = typer.Typer(add_completion=False, invoke_without_command=True)
 console = Console(stderr=True)  # Rich output → stderr (human-readable, doesn't pollute pipes)
 
-_AGENTS = {"brewmaster": BrewmasterAgent, "devenv": DevEnvAgent, "pr_queue": PRQueueAgent}
+_AGENTS = {
+    "brewmaster": BrewmasterAgent,
+    "devenv": DevEnvAgent,
+    "pr_queue": PRQueueAgent,
+    "cross_ref": CrossRefAgent,
+}
 
 _SEVERITY_STYLE: dict[Severity, tuple[str, str]] = {
     Severity.info:         ("green",    "INFO  "),
@@ -85,7 +91,7 @@ def _render_agent(result: AgentResult, *, quiet: bool = False) -> None:
 def main(
     ctx: typer.Context,
     agent: list[str] = typer.Option(
-        ["brewmaster", "devenv", "pr_queue"],
+        ["brewmaster", "devenv", "pr_queue", "cross_ref"],
         "--agent", "-a",
         help="Agents to run (repeat for multiple).",
     ),
@@ -103,8 +109,8 @@ def main(
         typer.echo(f"Unknown agent(s): {', '.join(sorted(unknown))}", err=True)
         raise typer.Exit(1)
 
-    agents = [_AGENTS[name]() for name in agent]
-    orchestrator = Orchestrator(agents=agents, quiet_mode=quiet, parallel=parallel, persist=not no_persist)
+    agent_classes = [_AGENTS[name] for name in agent]
+    orchestrator = Orchestrator(agent_classes=agent_classes, quiet_mode=quiet, parallel=parallel, persist=not no_persist)
     briefing = asyncio.run(orchestrator.run())
 
     if json_output:

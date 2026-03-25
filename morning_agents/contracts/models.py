@@ -71,6 +71,12 @@ class BriefingConfig(BaseModel):
     quiet_mode: bool = False
 
 
+class ExecutionMeta(BaseModel):
+    stages: list[list[str]]
+    dependency_graph: dict[str, list[str]]
+    retries: dict[str, int] = Field(default_factory=dict)
+
+
 # ---------------------------------------------------------------------------
 # Core models
 # ---------------------------------------------------------------------------
@@ -129,6 +135,7 @@ class BriefingOutput(BaseModel):
     agent_results: list[AgentResult] = Field(default_factory=list)
     cross_references: list[CrossReference] = Field(default_factory=list)
     summary: BriefingSummary
+    execution: ExecutionMeta
     config: BriefingConfig
 
     @classmethod

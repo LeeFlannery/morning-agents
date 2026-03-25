@@ -4,42 +4,79 @@
 
 ```
 CLI (cli.py)
-  └─ Orchestrator (orchestrator.py)
-       ├─ ServerManager (starts MCP servers, gives agents ClientSession objects)
-       ├─ [Agent, Agent, Agent] (run in parallel via asyncio.gather)
-       │    └─ BaseAgent.run() → AgentResult (list[Finding])
-       ├─ find_cross_references() (correlates findings across agents)
-       ├─ persist_briefing() (writes runs/brief-YYYY-MM-DD-HHMMSS.json)
-       └─ BriefingOutput (the final contract, JSON to stdout)
+  └─ Orchestrator (orchestrator/)
+       ├─ ServerManager          starts MCP servers, holds ClientSession objects
+       ├─ ResourceContext        semaphore + workspace root + briefing ID
+       ├─ execute_dag()          topological execution via graphlib.TopologicalSorter
+       │    ├─ depth 0: [BrewmasterAgent, DevEnvAgent, PRQueueAgent]  (concurrent)
+       │    └─ depth 1: [CrossRefAgent]  (receives depth-0 results as upstream)
+       ├─ persist_briefing()     writes runs/brief-YYYY-MM-DD-HHMMSS.json
+       └─ BriefingOutput         final contract, JSON to stdout
 ```
 
 ## Components
 
 ### CLI (`morning_agents/cli.py`)
 
-Typer app. Parses options, constructs agents, runs the orchestrator, renders output. Subcommands (`history`, `last`, `show`) use the persistence layer directly.
+Typer app. Parses options, constructs agent classes, runs the orchestrator, renders output. Subcommands (`history`, `last`, `show`) use the persistence layer directly.
 
-### Orchestrator (`morning_agents/orchestrator.py`)
+### Orchestrator (`morning_agents/orchestrator/`)
 
-Manages the full briefing lifecycle:
+The orchestrator package has four modules:
 
-1. Determines which MCP servers are needed across all agents
-2. Starts those servers via `ServerManager`
-3. Runs agents in parallel (or serially with `--no-parallel`)
-4. Calls `result.compute_summary()` on each `AgentResult`
-5. Runs `find_cross_references()` on all results
-6. Builds `BriefingOutput`
-7. Persists to `runs/` (unless `persist=False`)
+| Module | Responsibility |
+|---|---|
+| `orchestrator.py` | Briefing lifecycle: setup, DAG execution, result assembly, persist |
+| `dag_executor.py` | `execute_dag()` — topological sort, concurrency, failure isolation |
+| `server_manager.py` | MCP server process lifecycle, `ClientSession` management |
+| `resources.py` | `ResourceContext` dataclass injected into every agent |
 
-### ServerManager
+**DAG execution flow:**
 
-Starts and shuts down MCP servers. Maps server names to `ClientSession` objects. Agents declare which servers they need via `mcp_servers = [...]`; the orchestrator deduplicates before starting.
+1. Build dependency graph from each agent's `depends_on`
+2. Dependencies are *soft*: if a declared dependency is not in the active agent set, it is silently ignored rather than erroring (supports partial runs)
+3. `TopologicalSorter.get_ready()` yields each tier of agents that have no remaining unfinished dependencies
+4. Each tier runs concurrently via `asyncio.gather`
+5. Failed agents cascade: dependents are skipped and marked as errors, but independent agents still run
+6. Each `run()` call is gated by a shared `asyncio.Semaphore` (default: 4) to prevent rate-limit hammering on the Anthropic API
 
-Server configs live in `morning_agents/config.py` → `SERVER_REGISTRY`.
+### ResourceContext (`morning_agents/orchestrator/resources.py`)
 
-### Agents (`morning_agents/agents/`)
+Frozen dataclass injected into every agent at construction time. Holds:
 
-Each agent is a subclass of `BaseAgent`. Agents receive a dict of `ClientSession` objects keyed by server name. They call MCP tools, feed results to Claude, and return an `AgentResult`.
+- `semaphore` — shared concurrency gate for API calls
+- `workspace_root` — base path for per-run agent workspaces (`runs/`)
+- `briefing_id` — current run ID (used to namespace workspaces)
+- `server_manager` — reference for agents that need direct session access
+
+Agents with `workspace_type = "scratch"` or `"persistent"` call `self.workspace` to get their isolated `runs/<briefing_id>/<agent_name>/` directory.
+
+### BaseAgent (`morning_agents/agents/base.py`)
+
+Abstract base class. Subclasses must define three class attributes:
+
+```python
+class MyAgent(BaseAgent):
+    name = "my_agent"                  # unique key, used in depends_on
+    display_name = "My Agent"          # shown in terminal output
+    mcp_servers = ["some-mcp"]         # servers this agent needs
+
+    # Optional:
+    depends_on = ["other_agent"]       # upstream agents (default: [])
+    workspace_type = "scratch"         # "none" | "scratch" | "persistent"
+
+    async def run(
+        self,
+        sessions: dict[str, ClientSession],
+        upstream: dict[str, AgentResult] | None = None,
+    ) -> AgentResult: ...
+```
+
+`upstream` is `None` for depth-0 agents, and `{agent_name: AgentResult}` for agents that declared `depends_on`.
+
+### ServerManager (`morning_agents/orchestrator/server_manager.py`)
+
+Starts and shuts down MCP servers as child processes over stdio. Deduplicates: if multiple agents need the same server, it starts once and shares the `ClientSession`. Server configs live in `config.py → SERVER_REGISTRY`.
 
 ### Persistence (`morning_agents/persistence.py`)
 
@@ -47,7 +84,7 @@ Saves/loads briefing runs as JSON files in `runs/`. Files are named `brief-YYYY-
 
 ### Cross-Reference Engine (`morning_agents/skills/cross_reference.py`)
 
-Rule-based correlation. Each `CorrelationRule` receives all `AgentResult` objects and returns `CrossReference` objects. Rules are registered in `CORRELATION_RULES`.
+Rule-based correlation. Each `CorrelationRule` receives all `AgentResult` objects and returns `CrossReference` objects. Rules are registered in `CORRELATION_RULES`. The `CrossRefAgent` wraps this engine as a proper DAG node with `depends_on = ["brewmaster", "devenv", "pr_queue"]`.
 
 ## Data Flow
 
@@ -58,10 +95,33 @@ MCP tool call → raw result
   → strip_fences() + json.loads() → parsed dict
   → Finding objects
   → AgentResult
-  → BriefingOutput (with cross_references + summary)
+  → DAG executor collects all AgentResults
+  → CrossRefAgent correlates findings (depth 1)
+  → BriefingOutput (agent_results + cross_references + execution metadata)
   → persist_briefing() → runs/brief-*.json
   → stdout (JSON) + stderr (Rich)
 ```
+
+## ExecutionMeta
+
+Every `BriefingOutput` now includes an `execution` field:
+
+```json
+{
+  "execution": {
+    "stages": [["brewmaster", "devenv", "pr_queue"], ["cross_ref"]],
+    "dependency_graph": {
+      "brewmaster": [],
+      "devenv": [],
+      "pr_queue": [],
+      "cross_ref": ["brewmaster", "devenv", "pr_queue"]
+    },
+    "retries": {}
+  }
+}
+```
+
+This makes the execution topology inspectable without needing to understand the source.
 
 ## Stdout vs Stderr
 

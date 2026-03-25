@@ -30,7 +30,7 @@ morning-agents [OPTIONS]
 
 | Option | Default | Description |
 |---|---|---|
-| `--agent`, `-a` | `brewmaster devenv pr_queue` | Agents to run. Repeat for multiple. |
+| `--agent`, `-a` | `brewmaster devenv pr_queue cross_ref` | Agents to run. Repeat for multiple. |
 | `--parallel / --no-parallel` | `--parallel` | Run agents in parallel. |
 | `--quiet`, `-q` | off | Suppress detail lines in output. |
 | `--json` | off | Output JSON only; skip Rich rendering. |

@@ -95,6 +95,7 @@ The top-level output contract. Everything else is nested here.
 | `agent_results` | `list[AgentResult]` | One per agent |
 | `cross_references` | `list[CrossReference]` | Correlated findings |
 | `summary` | `BriefingSummary` | Counts and stats |
+| `execution` | `ExecutionMeta` | DAG stages, dependency graph, retry counts |
 | `config` | `BriefingConfig` | Runtime config snapshot |
 
 ---

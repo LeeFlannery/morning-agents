@@ -8,8 +8,8 @@
 
 Checks Homebrew package health. Calls two MCP tools concurrently:
 
-- `list_outdated_packages`: returns packages with current/latest versions
-- `run_brew_doctor`: returns warning strings
+- `list_outdated`: returns packages with current/latest versions
+- `get_doctor_status`: returns warning strings
 
 Passes results to Claude for severity assessment. Classifies version jumps (patch/minor/major) via `semver.classify()`.
 
@@ -58,12 +58,12 @@ Feeds results to Claude with `tool_id` hints per tool. Uses `semver.classify()` 
 
 **File:** `morning_agents/agents/pr_queue.py`
 **MCP Server:** `github-mcp` (`github-mcp-server` binary)
-**Display name:** `🔍 PR Queue`
+**Display name:** `🔀 PR Queue`
 
-Surfaces GitHub PRs that need attention. Calls:
+Surfaces GitHub PRs that need attention. Calls `search_pull_requests` twice concurrently:
 
-- `list_pull_requests` (PRs awaiting your review)
-- `list_pull_requests` (your authored open PRs)
+- query `is:pr is:open review-requested:<user>` (PRs awaiting your review)
+- query `is:pr is:open author:<user>` (your authored open PRs)
 
 Enriches PR timestamps with relative time strings (`"3 days ago"`) via `time_context.relative_time()`. Passes enriched data to Claude for priority assessment.
 
@@ -75,5 +75,24 @@ Enriches PR timestamps with relative time strings (`"3 days ago"`) via `time_con
 | `pr_id` | PR number |
 | `repo` | `owner/repo` |
 | `url` | GitHub URL |
-| `category` | `"needs_review"` / `"my_open_pr"` |
-| `age_relative` | Relative age string |
+| `source` | `"github"` |
+
+---
+
+## CrossRefAgent
+
+**File:** `morning_agents/agents/cross_ref.py`
+**MCP Server:** none
+**Display name:** `🔗 Cross-Reference`
+**Depth:** 1 — `depends_on = ["brewmaster", "devenv", "pr_queue"]`
+
+Runs after the three depth-0 agents complete. Receives their results as `upstream` and applies correlation rules from `skills/cross_reference.py` to find relationships across agents (e.g. a Node.js upgrade finding coinciding with Node-related open PRs).
+
+Produces `Finding` objects with `category = "cross_reference"`. Does not call the Claude API or any MCP tools — pure Python logic over upstream findings.
+
+**Finding metadata keys:**
+
+| Key | Description |
+|---|---|
+| `source_findings` | List of finding IDs that triggered this cross-reference |
+| `source_agents` | List of agent names involved |

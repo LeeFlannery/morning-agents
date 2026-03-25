@@ -30,6 +30,8 @@ class MyAgent(BaseAgent):
     name = "my_agent"
     display_name = "🔥 My Agent"
     mcp_servers = ["some-mcp"]          # must match SERVER_REGISTRY keys
+    depends_on = []                     # optional: list of agent names to wait for
+    workspace_type = "none"             # "none" | "scratch" | "persistent"
 
     def get_system_prompt(self) -> str:
         return (
@@ -38,7 +40,7 @@ class MyAgent(BaseAgent):
             '{"findings": [{"title": str, "detail": str, "severity": "info"|"warning"|"action_needed"}]}'
         )
 
-    async def run(self, sessions: dict[str, ClientSession]) -> AgentResult:
+    async def run(self, sessions: dict[str, ClientSession], upstream: dict | None = None) -> AgentResult:
         started_at = datetime.now(tz=timezone.utc)
         session = sessions["some-mcp"]
         tool_calls: list[ToolCall] = []
