@@ -9,8 +9,6 @@ from morning_agents.contracts.models import (
     AgentResult,
     AgentStatus,
     Finding,
-    FindingSummary,
-    Severity,
 )
 from morning_agents.skills.cross_reference import find_cross_references
 from morning_agents.skills.timing import elapsed_ms
@@ -34,7 +32,7 @@ class CrossRefAgent(BaseAgent):
 
         if not upstream:
             completed_at = datetime.now(tz=timezone.utc)
-            return AgentResult(
+            result = AgentResult(
                 agent_name=self.name,
                 agent_display_name=self.display_name,
                 status=AgentStatus.success,
@@ -42,9 +40,10 @@ class CrossRefAgent(BaseAgent):
                 completed_at=completed_at,
                 duration_ms=elapsed_ms(started_at, completed_at),
                 findings=[],
-                summary=FindingSummary(total=0, by_severity={}),
                 tool_calls=[],
             )
+            result.compute_summary()
+            return result
 
         cross_refs = find_cross_references(list(upstream.values()))
 
@@ -67,7 +66,7 @@ class CrossRefAgent(BaseAgent):
             ))
 
         completed_at = datetime.now(tz=timezone.utc)
-        return AgentResult(
+        result = AgentResult(
             agent_name=self.name,
             agent_display_name=self.display_name,
             status=AgentStatus.success,
@@ -75,9 +74,7 @@ class CrossRefAgent(BaseAgent):
             completed_at=completed_at,
             duration_ms=elapsed_ms(started_at, completed_at),
             findings=findings,
-            summary=FindingSummary(total=len(findings), by_severity={
-                Severity.warning.value: sum(1 for f in findings if f.severity == Severity.warning),
-                Severity.action_needed.value: sum(1 for f in findings if f.severity == Severity.action_needed),
-            } if findings else {},),
             tool_calls=[],
         )
+        result.compute_summary()
+        return result

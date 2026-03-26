@@ -12,12 +12,12 @@ from morning_agents.orchestrator import Orchestrator
 
 @pytest.fixture(scope="module")
 async def briefing() -> BriefingOutput:
-    orchestrator = Orchestrator(agents=[BrewmasterAgent()])
+    orchestrator = Orchestrator(agent_classes=[BrewmasterAgent])
     return await orchestrator.run()
 
 
 async def test_briefing_shape(briefing: BriefingOutput) -> None:
-    assert briefing.version == "0.1.0"
+    assert briefing.version == "0.1.002"
     assert briefing.briefing_id.startswith("brief-")
     assert briefing.generated_at is not None
     assert briefing.duration_ms > 0

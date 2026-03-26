@@ -135,7 +135,7 @@ class BriefingOutput(BaseModel):
     agent_results: list[AgentResult] = Field(default_factory=list)
     cross_references: list[CrossReference] = Field(default_factory=list)
     summary: BriefingSummary
-    execution: ExecutionMeta
+    execution: Optional[ExecutionMeta] = None
     config: BriefingConfig
 
     @classmethod

@@ -50,7 +50,15 @@ morning-agents | jq '.summary'
 morning-agents > briefing.json
 ```
 
-Every run is persisted to `runs/` and viewable with `morning-agents history`.
+Every run is persisted to `runs/` and viewable with the built-in subcommands:
+
+```bash
+morning-agents history       # list recent runs
+morning-agents last          # replay most recent run
+morning-agents show <run-id> # show a specific run
+morning-agents eval          # run golden test suite against frozen fixtures
+morning-agents diff <run-id> # regression report vs. most recent run
+```
 
 ---
 
@@ -93,9 +101,26 @@ Full setup in the [Quickstart](https://leeflannery.github.io/morning-agents/quic
 uv run pytest evals/ -v
 ```
 
-Unit tests (no secrets): `test_persistence.py`, `test_cross_reference.py`, `test_time_context.py`
+**Unit tests (no secrets):** `test_persistence.py`, `test_cross_reference.py`, `test_time_context.py`, `test_dag_executor.py`, `test_regression.py`
 
-Integration tests (need `ANTHROPIC_API_KEY` and `GITHUB_TOKEN`): `test_brewmaster.py`, `test_devenv.py`, `test_pr_queue.py`
+**Integration tests** (need `ANTHROPIC_API_KEY` + `GITHUB_TOKEN`): `test_brewmaster.py`, `test_devenv.py`, `test_pr_queue.py`
+
+**Golden tests** (need `ANTHROPIC_API_KEY`): freeze real tool outputs as fixtures and use an LLM judge (Haiku) to grade each agent's findings against semantic criteria. Run the full suite from the CLI:
+
+```bash
+morning-agents eval
+```
+
+## Regression Detection
+
+Compare two saved runs to detect output degradation:
+
+```bash
+morning-agents diff <baseline-run-id>
+morning-agents diff <baseline-run-id> --run-b <current-run-id>
+```
+
+Flags agent failures, finding count drops, detail quality drops, and DAG stage changes. Exits non-zero if any critical regression is found.
 
 ---
 

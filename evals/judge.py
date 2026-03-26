@@ -68,12 +68,12 @@ def _build_judge_prompt(
 
 The agent received this input data:
 <input>
-{json.dumps(frozen_input, indent=2)[:3000]}
+{json.dumps(frozen_input, indent=2, default=str)[:3000]}
 </input>
 
 The agent produced these findings:
 <findings>
-{json.dumps(findings, indent=2)[:3000]}
+{json.dumps(findings, indent=2, default=str)[:3000]}
 </findings>
 
 Evaluate this specific criterion:

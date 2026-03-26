@@ -14,10 +14,11 @@ checks:
       finding_mentions: ["node", "Node"]
       severity: "action_needed"
 
-  - id: "python-minor"
-    description: "Python 3.11 → 3.13 is a minor/major upgrade and should be warning or action_needed"
+  - id: "python-needs-update"
+    description: "Python 3.11.8 → 3.13.2 is a significant upgrade. A finding should exist mentioning Python with severity warning or action_needed (not info, since 3.11 → 3.13 is more than a patch)."
     expected:
       finding_mentions: ["python", "Python"]
+      severity_at_least: "warning"
 
   - id: "all-tools-covered"
     description: "All four tools (xcode, vscode, node, python) should have findings"

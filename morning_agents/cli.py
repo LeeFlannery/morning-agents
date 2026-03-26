@@ -166,8 +166,7 @@ def show(run_id: str):
 @app.command(name="eval")
 def eval_cmd():
     """Run all golden test cases against frozen fixtures (requires ANTHROPIC_API_KEY)."""
-    import asyncio as _asyncio
-    _asyncio.run(_run_eval())
+    asyncio.run(_run_eval())
 
 
 async def _run_eval() -> None:
@@ -179,7 +178,11 @@ async def _run_eval() -> None:
     from morning_agents.orchestrator.resources import ResourceContext
 
     GOLDEN = Path("evals/golden")
-    ctx = ResourceContext(semaphore=asyncio.Semaphore(4), workspace_root=Path("/tmp/morning-agents-eval"), briefing_id="eval")
+    ctx = ResourceContext(
+        semaphore=asyncio.Semaphore(4),
+        workspace_root=Path("/tmp/morning-agents-eval"),
+        briefing_id="eval",
+    )
 
     console.print("\n[bold]Golden Test Suite[/bold]\n")
 
@@ -252,7 +255,7 @@ def diff_runs(
             raise typer.Exit(1)
         current_id = current.briefing_id
 
-    console.print(f"\n[bold]Regression Report[/bold]")
+    console.print("\n[bold]Regression Report[/bold]")
     console.print(f"  Baseline: {run_a}")
     console.print(f"  Current:  {current_id}\n")
 
