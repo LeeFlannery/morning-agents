@@ -1,0 +1,40 @@
+agent: brewmaster
+description: "Brewmaster correctly classifies version jumps and flags brew doctor warnings"
+
+checks:
+  - id: "node-major"
+    description: "node 20 → 22 is a major version bump and should be action_needed severity"
+    expected:
+      finding_mentions: ["node"]
+      severity: "action_needed"
+    finding_match:
+      metadata_tool_id: "node"
+
+  - id: "python-patch"
+    description: "python@3.11 3.11.8 → 3.11.12 is a patch bump and should be info severity"
+    expected:
+      finding_mentions: ["python"]
+      severity: "info"
+    finding_match:
+      metadata_tool_id: "python@3.11"
+
+  - id: "wget-minor"
+    description: "wget 1.21.4 → 1.25.0 is a minor bump and should be warning severity"
+    expected:
+      finding_mentions: ["wget"]
+      severity: "warning"
+    finding_match:
+      metadata_tool_id: "wget"
+
+  - id: "doctor-warning-flagged"
+    description: "The brew doctor warning about /usr/local/include/node should be flagged"
+    expected:
+      min_findings: 1
+      finding_mentions: ["node"]
+    finding_match:
+      category: "doctor_warning"
+
+  - id: "vscode-cask-included"
+    description: "visual-studio-code cask 1.96.0 → 1.98.2 (minor) should produce a finding"
+    expected:
+      finding_mentions: ["visual-studio-code"]

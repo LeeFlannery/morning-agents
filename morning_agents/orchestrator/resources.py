@@ -14,7 +14,7 @@ class ResourceContext:
     semaphore: asyncio.Semaphore
     workspace_root: Path
     briefing_id: str
-    server_manager: "ServerManager"
+    server_manager: "ServerManager | None" = None
 
     def get_workspace(self, agent_name: str) -> Path:
         """Create and return an isolated workspace directory for an agent run."""

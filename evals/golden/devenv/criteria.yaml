@@ -1,0 +1,25 @@
+agent: devenv
+description: "DevEnv correctly classifies dev tool version freshness"
+
+checks:
+  - id: "xcode-major"
+    description: "Xcode 15.4 → 16.2 is a major upgrade and should be action_needed"
+    expected:
+      finding_mentions: ["xcode", "Xcode"]
+      severity: "action_needed"
+
+  - id: "node-major"
+    description: "Node 20 → 22 is a major upgrade and should be action_needed"
+    expected:
+      finding_mentions: ["node", "Node"]
+      severity: "action_needed"
+
+  - id: "python-minor"
+    description: "Python 3.11 → 3.13 is a minor/major upgrade and should be warning or action_needed"
+    expected:
+      finding_mentions: ["python", "Python"]
+
+  - id: "all-tools-covered"
+    description: "All four tools (xcode, vscode, node, python) should have findings"
+    expected:
+      min_findings: 4

@@ -1,0 +1,9 @@
+{
+  "tool": "get_doctor_status",
+  "output": {
+    "healthy": false,
+    "warnings": [
+      "Warning: /usr/local/include/node is not writable.\nYou should change the ownership and permissions of /usr/local/include/node back to your user account:\n  sudo chown -R $(whoami) /usr/local/include/node"
+    ]
+  }
+}

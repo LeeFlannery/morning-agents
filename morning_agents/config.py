@@ -23,7 +23,7 @@ GITHUB_MCP = StdioServerParameters(
 )
 
 MODEL = "claude-sonnet-4-6"
-VERSION = "0.1.001"
+VERSION = "0.1.002"
 MAX_CONCURRENT_API_CALLS = 4
 
 SERVER_REGISTRY: dict[str, StdioServerParameters] = {

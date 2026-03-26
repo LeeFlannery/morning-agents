@@ -1,0 +1,109 @@
+{
+  "upstream": {
+    "brewmaster": {
+      "agent_name": "brewmaster",
+      "agent_display_name": "🍺 Brewmaster",
+      "status": "success",
+      "started_at": "2026-03-15T07:14:20Z",
+      "completed_at": "2026-03-15T07:14:22Z",
+      "duration_ms": 2100,
+      "findings": [
+        {
+          "id": "brew-001",
+          "source_agent": "brewmaster",
+          "category": "outdated_package",
+          "severity": "action_needed",
+          "title": "node: 20.11.0 → 22.0.0 (major)",
+          "detail": "Major version bump. Review changelog before upgrading.",
+          "metadata": {
+            "tool_id": "node",
+            "package": "node",
+            "current_version": "20.11.0",
+            "latest_version": "22.0.0",
+            "version_jump": "major",
+            "source": "homebrew"
+          },
+          "timestamp": "2026-03-15T07:14:22Z"
+        }
+      ],
+      "tool_calls": [],
+      "summary": {"total": 1, "by_severity": {"action_needed": 1}},
+      "error": null
+    },
+    "devenv": {
+      "agent_name": "devenv",
+      "agent_display_name": "🛠️  DevEnv",
+      "status": "success",
+      "started_at": "2026-03-15T07:14:20Z",
+      "completed_at": "2026-03-15T07:14:23Z",
+      "duration_ms": 2300,
+      "findings": [
+        {
+          "id": "devenv-001",
+          "source_agent": "devenv",
+          "category": "outdated_tool",
+          "severity": "action_needed",
+          "title": "Node.js: 20.11.0 → 22.0.0 (major)",
+          "detail": "Major version behind. Consider upgrading.",
+          "metadata": {
+            "tool_id": "node",
+            "tool": "Node.js",
+            "installed_version": "20.11.0",
+            "latest_version": "22.0.0",
+            "version_jump": "major",
+            "source": "devenv"
+          },
+          "timestamp": "2026-03-15T07:14:23Z"
+        }
+      ],
+      "tool_calls": [],
+      "summary": {"total": 1, "by_severity": {"action_needed": 1}},
+      "error": null
+    },
+    "pr_queue": {
+      "agent_name": "pr_queue",
+      "agent_display_name": "🔀 PR Queue",
+      "status": "success",
+      "started_at": "2026-03-15T07:14:20Z",
+      "completed_at": "2026-03-15T07:14:24Z",
+      "duration_ms": 2400,
+      "findings": [
+        {
+          "id": "pr-001",
+          "source_agent": "pr_queue",
+          "category": "pr_review",
+          "severity": "action_needed",
+          "title": "LeeFlannery/morning-agents#312: Bump node to v22",
+          "detail": "PR by sarah, opened 2 days ago. Review requested.",
+          "metadata": {
+            "tool_id": "github_pr",
+            "pr_id": "312",
+            "repo": "LeeFlannery/morning-agents",
+            "url": "https://github.com/LeeFlannery/morning-agents/pull/312",
+            "source": "github"
+          },
+          "timestamp": "2026-03-15T07:14:24Z"
+        },
+        {
+          "id": "pr-002",
+          "source_agent": "pr_queue",
+          "category": "pr_update",
+          "severity": "warning",
+          "title": "LeeFlannery/hushcut#298: Add Redis caching",
+          "detail": "PR by mike, opened 5 days ago. 12 files changed.",
+          "metadata": {
+            "tool_id": "github_pr",
+            "pr_id": "298",
+            "repo": "LeeFlannery/hushcut",
+            "url": "https://github.com/LeeFlannery/hushcut/pull/298",
+            "source": "github"
+          },
+          "timestamp": "2026-03-15T07:14:24Z"
+        }
+      ],
+      "tool_calls": [],
+      "summary": {"total": 2, "by_severity": {"action_needed": 1, "warning": 1}},
+      "error": null
+    }
+  }
+}

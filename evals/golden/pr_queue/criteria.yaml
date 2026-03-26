@@ -1,0 +1,19 @@
+agent: pr_queue
+description: "PR Queue surfaces actionable PRs correctly"
+
+checks:
+  - id: "review-requested-flagged"
+    description: "PRs where review is requested should be surfaced as needing attention"
+    expected:
+      min_findings: 1
+      finding_mentions: ["312", "node"]
+
+  - id: "stale-pr-flagged"
+    description: "PR #298 has been open 5+ days with no updates and should be flagged"
+    expected:
+      finding_mentions: ["298"]
+
+  - id: "own-pr-included"
+    description: "Lee's own open PR #45 should appear in findings"
+    expected:
+      finding_mentions: ["45"]

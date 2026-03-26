@@ -1,0 +1,47 @@
+{
+  "tool": "search_pull_requests",
+  "output": {
+    "total_count": 3,
+    "items": [
+      {
+        "number": 312,
+        "title": "Bump node to v22",
+        "state": "open",
+        "html_url": "https://github.com/LeeFlannery/morning-agents/pull/312",
+        "repository_url": "https://api.github.com/repos/LeeFlannery/morning-agents",
+        "user": {"login": "sarah"},
+        "created_at": "2026-03-23T09:00:00Z",
+        "updated_at": "2026-03-23T12:00:00Z",
+        "requested_reviewers": [{"login": "lee"}],
+        "draft": false,
+        "labels": []
+      },
+      {
+        "number": 298,
+        "title": "Add Redis caching layer",
+        "state": "open",
+        "html_url": "https://github.com/LeeFlannery/hushcut/pull/298",
+        "repository_url": "https://api.github.com/repos/LeeFlannery/hushcut",
+        "user": {"login": "mike"},
+        "created_at": "2026-03-20T09:00:00Z",
+        "updated_at": "2026-03-20T09:00:00Z",
+        "requested_reviewers": [{"login": "lee"}],
+        "draft": false,
+        "labels": []
+      },
+      {
+        "number": 45,
+        "title": "Add morning-agents eval CLI command",
+        "state": "open",
+        "html_url": "https://github.com/LeeFlannery/morning-agents/pull/45",
+        "repository_url": "https://api.github.com/repos/LeeFlannery/morning-agents",
+        "user": {"login": "lee"},
+        "created_at": "2026-03-24T15:00:00Z",
+        "updated_at": "2026-03-25T08:00:00Z",
+        "requested_reviewers": [],
+        "draft": false,
+        "labels": []
+      }
+    ]
+  }
+}

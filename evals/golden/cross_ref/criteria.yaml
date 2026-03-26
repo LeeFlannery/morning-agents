@@ -1,0 +1,26 @@
+agent: cross_ref
+description: "CrossRefAgent correlates node upgrade findings with node-related PRs"
+
+checks:
+  - id: "node-pr-correlation"
+    description: "Should produce a cross-reference linking the node upgrade (brew-001, devenv-001) to PR #312"
+    expected:
+      min_findings: 1
+      finding_mentions: ["node", "312"]
+
+  - id: "no-false-correlation"
+    description: "Should NOT correlate the Redis caching PR #298 with node upgrades"
+    expected:
+      no_finding_mentions: ["Redis", "298"]
+
+  - id: "correlation-severity"
+    description: "The node upgrade cross-reference should be warning severity"
+    finding_match:
+      category_contains: "cross_reference"
+    expected:
+      severity: "warning"
+
+  - id: "source-tracking"
+    description: "Cross-reference findings must have source_findings and source_agents in metadata"
+    expected:
+      metadata_has_keys: ["source_findings", "source_agents"]

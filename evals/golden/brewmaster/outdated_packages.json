@@ -1,0 +1,15 @@
+{
+  "tool": "list_outdated",
+  "output": {
+    "formulae": [
+      {"name": "node", "current": "20.11.0", "latest": "22.0.0", "pinned": false},
+      {"name": "python@3.11", "current": "3.11.8", "latest": "3.11.12", "pinned": false},
+      {"name": "git", "current": "2.44.0", "latest": "2.44.2", "pinned": false},
+      {"name": "wget", "current": "1.21.4", "latest": "1.25.0", "pinned": false},
+      {"name": "jq", "current": "1.7.1", "latest": "1.7.2", "pinned": false}
+    ],
+    "casks": [
+      {"name": "visual-studio-code", "current": "1.96.0", "latest": "1.98.2"}
+    ]
+  }
+}

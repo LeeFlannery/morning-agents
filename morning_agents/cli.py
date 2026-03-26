@@ -163,5 +163,131 @@ def show(run_id: str):
         raise typer.Exit(1)
 
 
+@app.command(name="eval")
+def eval_cmd():
+    """Run all golden test cases against frozen fixtures (requires ANTHROPIC_API_KEY)."""
+    import asyncio as _asyncio
+    _asyncio.run(_run_eval())
+
+
+async def _run_eval() -> None:
+    import json
+    import yaml
+    from pathlib import Path
+    from evals.mocks import MockMCPSession, load_upstream_fixture
+    from evals.judge import judge_agent_output
+    from morning_agents.orchestrator.resources import ResourceContext
+
+    GOLDEN = Path("evals/golden")
+    ctx = ResourceContext(semaphore=asyncio.Semaphore(4), workspace_root=Path("/tmp/morning-agents-eval"), briefing_id="eval")
+
+    console.print("\n[bold]Golden Test Suite[/bold]\n")
+
+    async def _run_suite(display: str, agent_name: str, sessions: dict, upstream_arg, criteria_path: Path, frozen_input: dict) -> tuple[int, int]:
+        criteria = yaml.safe_load(criteria_path.read_text())
+        agent = _AGENTS[agent_name](resources=ctx)
+        result = await agent.run(sessions=sessions, upstream=upstream_arg)
+        result.compute_summary()
+        verdict = await judge_agent_output(
+            agent_name=agent_name,
+            findings=[f.model_dump() for f in result.findings],
+            criteria=criteria,
+            frozen_input=frozen_input,
+        )
+        score_pct = f"{verdict.score:.0%}"
+        icon = "✅" if verdict.score >= 0.8 else "⚠️"
+        console.print(f"  [bold]{display}[/bold] ({verdict.total_checks} checks)")
+        for r in verdict.results:
+            status = "[green]✅[/green]" if r.passed else "[red]❌[/red]"
+            console.print(f"    {status} {r.check_id}: {r.reasoning[:100]}")
+        console.print(f"    Score: {score_pct} ({verdict.passed}/{verdict.total_checks}) {icon}\n")
+        return verdict.total_checks, verdict.passed
+
+    # Depth-0 suites (no inter-agent dependencies) run in parallel
+    outdated = json.loads((GOLDEN / "brewmaster/outdated_packages.json").read_text())
+    doctor = json.loads((GOLDEN / "brewmaster/doctor_warnings.json").read_text())
+    brew_data = {"list_outdated": outdated["output"], "get_doctor_status": doctor["output"]}
+
+    devenv_data = json.loads((GOLDEN / "devenv/tool_versions.json").read_text())
+
+    pr_raw = json.loads((GOLDEN / "pr_queue/search_results.json").read_text())
+    pr_data = {"search_pull_requests": pr_raw["output"]}
+
+    depth0_results = await asyncio.gather(
+        _run_suite("🍺 Brewmaster", "brewmaster", {"homebrew-mcp": MockMCPSession(brew_data)}, None, GOLDEN / "brewmaster/criteria.yaml", brew_data),
+        _run_suite("🛠️  DevEnv", "devenv", {"devenv-mcp": MockMCPSession(devenv_data)}, None, GOLDEN / "devenv/criteria.yaml", devenv_data),
+        _run_suite("🔀 PR Queue", "pr_queue", {"github-mcp": MockMCPSession(pr_data)}, None, GOLDEN / "pr_queue/criteria.yaml", pr_data),
+    )
+
+    # CrossRef depends on upstream results — runs after depth-0
+    upstream = load_upstream_fixture(str(GOLDEN / "cross_ref/upstream_results.json"))
+    frozen_upstream = {name: r.model_dump() for name, r in upstream.items()}
+    crossref_result = await _run_suite("🔗 Cross-Reference", "cross_ref", {}, upstream, GOLDEN / "cross_ref/criteria.yaml", frozen_upstream)
+
+    all_results = [*depth0_results, crossref_result]
+    total_checks = sum(c for c, _ in all_results)
+    total_passed = sum(p for _, p in all_results)
+    overall_pct = f"{total_passed / total_checks:.0%}" if total_checks else "0%"
+    icon = "✅" if total_checks and total_passed / total_checks >= 0.8 else "⚠️"
+    console.print(f"  [bold]Overall: {overall_pct} ({total_passed}/{total_checks}) {icon}[/bold]\n")
+
+
+@app.command(name="diff")
+def diff_runs(
+    run_a: str = typer.Argument(..., help="Baseline run ID (e.g. brief-2026-03-15-071418)"),
+    run_b: str = typer.Option(None, help="Current run ID. Defaults to most recent run."),
+):
+    """Compare two briefing runs for regressions."""
+    from evals.regression import detect_regressions
+
+    baseline = load_briefing(RUNS_DIR / f"{run_a}.json")
+
+    if run_b:
+        current = load_briefing(RUNS_DIR / f"{run_b}.json")
+        current_id = run_b
+    else:
+        current = get_latest_run()
+        if current is None:
+            console.print("[red]No runs found.[/red]")
+            raise typer.Exit(1)
+        current_id = current.briefing_id
+
+    console.print(f"\n[bold]Regression Report[/bold]")
+    console.print(f"  Baseline: {run_a}")
+    console.print(f"  Current:  {current_id}\n")
+
+    flags = detect_regressions(baseline, current)
+    flag_map: dict[str, list] = {}
+    for f in flags:
+        flag_map.setdefault(f.agent_name, []).append(f)
+
+    all_agents = {r.agent_name for r in baseline.agent_results} | {r.agent_name for r in current.agent_results}
+    all_agents.add("_orchestrator")
+
+    for agent_name in sorted(all_agents):
+        agent_flags = flag_map.get(agent_name, [])
+        if not agent_flags:
+            if agent_name != "_orchestrator":
+                console.print(f"  [green]✅[/green] {agent_name}: no regressions")
+        else:
+            for flag in agent_flags:
+                icon = "[bold red]🔴[/bold red]" if flag.severity == "critical" else "[yellow]⚠️[/yellow]"
+                console.print(f"  {icon} {agent_name}: {flag.description}")
+
+    dag_flags = flag_map.get("_orchestrator", [])
+    if dag_flags:
+        for f in dag_flags:
+            console.print(f"  [yellow]⚠️[/yellow]  DAG stages: {f.description}")
+    else:
+        console.print(f"  [green]✅[/green] DAG stages: unchanged")
+
+    critical = sum(1 for f in flags if f.severity == "critical")
+    warnings = sum(1 for f in flags if f.severity == "warning")
+    console.print(f"\n  {len(flags)} flag{'s' if len(flags) != 1 else ''} ({critical} critical, {warnings} warning)\n")
+
+    if critical > 0:
+        raise typer.Exit(1)
+
+
 if __name__ == "__main__":
     app()
