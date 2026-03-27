@@ -1,12 +1,12 @@
 # Morning Agents
 
+**[MKDocs Complete documentation here!](https://leeflannery.github.io/morning-agents/)**
+
 A CLI morning briefing tool powered by Claude and MCP. Every morning, a set of agents runs in parallel, each backed by an MCP server, and drops a structured terminal briefing: Homebrew health, dev tool versions, GitHub PRs, and anything else you wire up.
 
 Inspired by Julia Cameron's ["Morning Pages"](https://amzn.to/4d9HFNd) from *The Artist's Way*.
 
 Python is the brains. TypeScript/Bun is the hands. Third-party Go binaries are welcome too. This is a work in progress. More agents are coming, and because the agent layer is built on MCP, you can add your own in any language.
-
-**[Documentation](https://leeflannery.github.io/morning-agents/)**
 
 ---
 
