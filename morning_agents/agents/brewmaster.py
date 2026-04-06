@@ -8,6 +8,7 @@ import anthropic
 from mcp import ClientSession
 
 from morning_agents.agents.base import BaseAgent
+from morning_agents.config import HAIKU
 from morning_agents.contracts.models import (
     AgentResult,
     AgentStatus,
@@ -18,7 +19,6 @@ from morning_agents.contracts.models import (
 from morning_agents.skills.mcp_utils import call_tool, parse_tool_result, strip_fences
 from morning_agents.skills.semver import classify
 from morning_agents.skills.severity import from_version_jump
-from morning_agents.config import MODEL
 from morning_agents.skills.timing import elapsed_ms, ms_timer
 
 _client = anthropic.AsyncAnthropic()
@@ -28,6 +28,7 @@ class BrewmasterAgent(BaseAgent):
     name = "brewmaster"
     display_name = "🍺 Brewmaster"
     mcp_servers = ["homebrew-mcp"]
+    model = HAIKU
 
     def get_system_prompt(self) -> str:
         return (
@@ -71,7 +72,7 @@ class BrewmasterAgent(BaseAgent):
 
         with ms_timer() as elapsed:
             response = await _client.messages.create(
-                model=MODEL,
+                model=self.model,
                 max_tokens=2048,
                 system=self.get_system_prompt(),
                 messages=[{"role": "user", "content": user_content}],

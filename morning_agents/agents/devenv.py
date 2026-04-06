@@ -8,7 +8,7 @@ import anthropic
 from mcp import ClientSession
 
 from morning_agents.agents.base import BaseAgent
-from morning_agents.config import MODEL
+from morning_agents.config import HAIKU
 from morning_agents.contracts.models import (
     AgentResult,
     AgentStatus,
@@ -35,6 +35,7 @@ class DevEnvAgent(BaseAgent):
     name = "devenv"
     display_name = "🛠️  DevEnv"
     mcp_servers = ["devenv-mcp"]
+    model = HAIKU
 
     def get_system_prompt(self) -> str:
         return (
@@ -81,7 +82,7 @@ class DevEnvAgent(BaseAgent):
 
         with ms_timer() as elapsed:
             response = await _client.messages.create(
-                model=MODEL,
+                model=self.model,
                 max_tokens=1024,
                 system=self.get_system_prompt(),
                 messages=[{"role": "user", "content": user_content}],

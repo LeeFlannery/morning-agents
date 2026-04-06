@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Literal
 
 from mcp import ClientSession
 
+from morning_agents.config import MODEL
 from morning_agents.contracts.models import AgentResult
 
 if TYPE_CHECKING:
@@ -18,6 +19,7 @@ class BaseAgent(ABC):
     mcp_servers: list[str]
     depends_on: list[str] = []
     workspace_type: Literal["none", "scratch", "persistent"] = "none"
+    model: str = MODEL
 
     def __init_subclass__(cls, **kwargs: object) -> None:
         super().__init_subclass__(**kwargs)
