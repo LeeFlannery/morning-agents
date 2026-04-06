@@ -9,7 +9,6 @@ import anthropic
 from mcp import ClientSession
 
 from morning_agents.agents.base import BaseAgent
-from morning_agents.config import MODEL
 from morning_agents.contracts.models import (
     AgentResult,
     AgentStatus,
@@ -165,7 +164,7 @@ class PRQueueAgent(BaseAgent):
 
         with ms_timer() as elapsed:
             response = await _client.messages.create(
-                model=MODEL,
+                model=self.model,
                 max_tokens=2048,
                 system=self.get_system_prompt(),
                 messages=[{"role": "user", "content": user_content}],

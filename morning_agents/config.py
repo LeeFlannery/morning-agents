@@ -23,6 +23,8 @@ GITHUB_MCP = StdioServerParameters(
 )
 
 MODEL = "claude-sonnet-4-6"
+HAIKU = "claude-haiku-4-5-20251001"
+JUDGE_MODEL = HAIKU
 VERSION = "0.1.002"
 MAX_CONCURRENT_API_CALLS = 4
 

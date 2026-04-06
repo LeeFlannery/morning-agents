@@ -6,9 +6,8 @@ from dataclasses import dataclass, field
 
 import anthropic
 
+from morning_agents.config import JUDGE_MODEL
 from morning_agents.skills.mcp_utils import strip_fences
-
-JUDGE_MODEL = "claude-haiku-4-5-20251001"
 
 _client = anthropic.AsyncAnthropic()
 

@@ -34,3 +34,5 @@ site/
 
 # Scratch / local experiments
 scratch/
+local-readme.md
+SCRIPT_LOCAL.md
