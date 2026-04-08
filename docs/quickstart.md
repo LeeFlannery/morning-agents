@@ -30,9 +30,8 @@ brew install github-mcp-server
 ## 2. Set your secrets
 
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-...
-export GITHUB_TOKEN=ghp_...
-export GITHUB_USERNAME=your-github-username
+cp .env.example .env
+# fill in ANTHROPIC_API_KEY, GITHUB_TOKEN, GITHUB_USERNAME
 ```
 
 Or use 1Password with the included `op.env` file:

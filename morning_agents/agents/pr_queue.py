@@ -30,6 +30,11 @@ _JUMP_TO_SEVERITY = {
 
 GITHUB_USERNAME = os.environ.get("GITHUB_USERNAME", "")
 
+# TODO: handle multiple GitHub PATs (e.g. personal + work accounts).
+# Currently a single GITHUB_TOKEN is passed to github-mcp-server at startup,
+# so queries only hit one account. Need to think through how to parameterize
+# the server config or run multiple instances with different tokens.
+
 
 class PRQueueAgent(BaseAgent):
     name = "pr_queue"

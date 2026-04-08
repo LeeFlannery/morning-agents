@@ -41,6 +41,22 @@ MCP servers can be written in any language. Agents declare `depends_on = [...]` 
 | PR Queue | `github-mcp-server` (Go) | PRs awaiting your review + your open PRs | 0 |
 | Cross-Reference | none | Correlates findings across depth-0 agents | 1 |
 
+## Dashboard
+
+A local web dashboard lets you browse and compare past briefing runs in your browser.
+
+```bash
+cd dashboard
+bun install
+bun dev
+```
+
+Open `http://localhost:5173`. The dashboard reads from the `runs/` directory via a Vite dev-server plugin -- no separate backend needed.
+
+Features: run history list, per-run detail with agent cards and DAG visualization, and side-by-side diff between any two runs.
+
+---
+
 ## Output
 
 Rich rendering goes to stderr. JSON (`BriefingOutput`) goes to stdout, pipeable and scriptable.
@@ -80,9 +96,14 @@ uv tool install .
 **Secrets:**
 
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-...
-export GITHUB_TOKEN=ghp_...
-export GITHUB_USERNAME=your-github-username
+cp .env.example .env
+# fill in ANTHROPIC_API_KEY, GITHUB_TOKEN, GITHUB_USERNAME
+```
+
+Or use 1Password with the included `op.env`:
+
+```bash
+op run --env-file=op.env -- morning-agents
 ```
 
 Then run:
