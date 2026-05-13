@@ -873,9 +873,8 @@ brew<span class="w"> </span>install<span class="w"> </span>github-mcp-server
 </code></pre></div>
 <hr />
 <h2 id="2-set-your-secrets">2. Set your secrets<a class="headerlink" href="#2-set-your-secrets" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">ANTHROPIC_API_KEY</span><span class="o">=</span>sk-ant-...
-<span class="nb">export</span><span class="w"> </span><span class="nv">GITHUB_TOKEN</span><span class="o">=</span>ghp_...
-<span class="nb">export</span><span class="w"> </span><span class="nv">GITHUB_USERNAME</span><span class="o">=</span>your-github-username
+<div class="highlight"><pre><span></span><code>cp<span class="w"> </span>.env.example<span class="w"> </span>.env
+<span class="c1"># fill in ANTHROPIC_API_KEY, GITHUB_TOKEN, GITHUB_USERNAME</span>
 </code></pre></div>
 <p>Or use 1Password with the included <code>op.env</code> file:</p>
 <div class="highlight"><pre><span></span><code>op<span class="w"> </span>run<span class="w"> </span>--env-file<span class="o">=</span>op.env<span class="w"> </span>--<span class="w"> </span>morning-agents
